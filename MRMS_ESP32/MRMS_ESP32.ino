@@ -10,6 +10,7 @@
 #include <mrm-imu.h>
 #include <mrm-pid.h>
 #include <mrm-ir-finder2.h>
+#include <mrm-ir-finder3.h>
 #include <mrm-ir-finder-can.h>
 #include <mrm-lid-can-b.h>
 #include <mrm-lid-can-b2.h>
@@ -20,6 +21,7 @@
 #include <mrm-ref-can.h>
 #include <mrm-robot.h>
 #include <mrm-robot-line.h>
+#include <mrm-robot-maze.h>
 #include <mrm-robot-soccer.h>
 #include <mrm-servo.h>
 #include <mrm-switch.h>
@@ -31,7 +33,7 @@ Robot *robot;
 
 void setup() {
 
-	robot = new RobotLine(); // RobotLine, RobotSoccer, or Your custom robot
+	robot = new RobotMaze(); // RobotLine, RobotSoccer, or Your custom robot
 	robot->run();
 }
 
