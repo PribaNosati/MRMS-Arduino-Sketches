@@ -22,6 +22,7 @@
 #include <mrm-robot.h>
 #include <mrm-robot-line.h>
 #include <mrm-robot-maze.h>
+#include <mrm-robot-min.h>
 #include <mrm-robot-soccer.h>
 #include <mrm-servo.h>
 #include <mrm-switch.h>
@@ -32,8 +33,7 @@
 Robot *robot;
 
 void setup() {
-
-	robot = new RobotMaze(); // RobotLine, RobotSoccer, or Your custom robot
+	robot = new RobotMin(); // RobotLine, RobotMaze, RobotMin, RobotSoccer, or Your custom robot
 	robot->run();
 }
 
