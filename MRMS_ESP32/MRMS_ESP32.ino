@@ -33,7 +33,7 @@
 Robot *robot;
 
 void setup() {
-	robot = new RobotMin(); // RobotLine, RobotMaze, RobotMin, RobotSoccer, or Your custom robot
+	robot = new RobotLine(); // RobotLine, RobotMaze, RobotMin, RobotSoccer, or Your custom robot
 	robot->run();
 }
 
