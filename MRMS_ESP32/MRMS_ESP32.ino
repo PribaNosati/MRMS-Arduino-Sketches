@@ -7,17 +7,18 @@
 #include <mrm-can-bus.h>
 #include <mrm-col-can.h>
 #include <mrm-common.h>
+#include <mrm-fet-can.h>
 #include <mrm-imu.h>
-#include <mrm-pid.h>
-#include <mrm-ir-finder2.h>
+//#include <mrm-ir-finder2.h>
 #include <mrm-ir-finder3.h>
-#include <mrm-ir-finder-can.h>
+//#include <mrm-ir-finder-can.h>
 #include <mrm-lid-can-b.h>
 #include <mrm-lid-can-b2.h>
 #include <mrm-mot2x50.h>
 #include <mrm-mot4x10.h>
 #include <mrm-mot4x3.6can.h>
 #include <mrm-node.h>
+#include <mrm-pid.h>
 #include <mrm-ref-can.h>
 #include <mrm-robot.h>
 #include <mrm-robot-line.h>
@@ -27,14 +28,14 @@
 #include <mrm-servo.h>
 #include <mrm-switch.h>
 #include <mrm-therm-b-can.h>
-#include <mrm-us.h>
+//#include <mrm-us.h>
 #include <Wire.h>
 
 Robot *robot;
 
 void setup() {
-	robot = new RobotLine(); // RobotLine, RobotMaze, RobotMin, RobotSoccer, or Your custom robot
-	robot->run();
+  robot = new RobotLine(); // RobotLine, RobotMaze, RobotMin, RobotSoccer, or Your custom robot
+  robot->run();
 }
 
 void loop() {}

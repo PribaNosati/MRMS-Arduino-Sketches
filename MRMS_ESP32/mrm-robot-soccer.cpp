@@ -2,7 +2,7 @@
 #include <mrm-bldc2x50.h>
 #include <mrm-imu.h>
 #include <mrm-lid-can-b2.h>
-#include <mrm-ir-finder2.h>
+//#include <mrm-ir-finder2.h>
 #include <mrm-ir-finder3.h>
 #include <mrm-mot2x50.h>
 #include <mrm-mot4x10.h>
@@ -37,7 +37,7 @@ uint16_t RobotSoccer::back() {
 }
 
 /** Ball's direction
-@return - robot's front is 0°, positive angles clockwise, negative anti-clockwise. Back of the robot is 180°.
+@return - robot's front is 0ï¿½, positive angles clockwise, negative anti-clockwise. Back of the robot is 180ï¿½.
 */
 int16_t RobotSoccer::ballAngle() {
 	return mrm_ir_finder3->angle();
@@ -78,7 +78,7 @@ uint16_t RobotSoccer::brightness(uint8_t transistorNumber, uint8_t deviceNumber)
 /** Go around the ball and approach it.
 */
 void RobotSoccer::catchBall() {
-	if (mrm_ir_finder2->anyIRSource()) {
+	if (mrm_ir_finder3->distance() == 0) {
 
 	}
 	else
@@ -113,7 +113,7 @@ void RobotSoccer::goAhead() {
 }
 
 /**Compass
-@return - North is 0º, clockwise are positive angles, values 0 - 360.
+@return - North is 0ï¿½, clockwise are positive angles, values 0 - 360.
 */
 float RobotSoccer::heading() {
 	return mrm_imu->heading();
@@ -124,7 +124,7 @@ float RobotSoccer::heading() {
 void RobotSoccer::idle() {
 	if (setup())
 		headingToMaintain = mrm_imu->heading();
-	if (mrm_ir_finder2->anyIRSource() && false)
+	if (mrm_ir_finder3->distance() == 0 && false)
 		actionSet(actionCatch);
 	else {
 		//print("\n\rError: %i = %i - 300\n\r", (int)(300 - robot->mrm_lid_can_b2->reading(3)), robot->mrm_lid_can_b2->reading(3));
@@ -183,7 +183,7 @@ void RobotSoccer::play() {
 }
 
 /**Pitch
-@return - Pitch in degrees. Inclination forwards or backwards. Leveled robot shows 0º.
+@return - Pitch in degrees. Inclination forwards or backwards. Leveled robot shows 0ï¿½.
 */
 float RobotSoccer::pitch() {
 	return mrm_imu->pitch();
@@ -197,7 +197,7 @@ uint16_t RobotSoccer::right() {
 }
 
 /** Roll
-@return - Roll in degrees. Inclination to the left or right. Values -90 - 90. Leveled robot shows 0º.
+@return - Roll in degrees. Inclination to the left or right. Values -90 - 90. Leveled robot shows 0ï¿½.
 */
 float RobotSoccer::roll() {
 	return mrm_imu->roll();
