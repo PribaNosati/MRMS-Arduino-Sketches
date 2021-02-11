@@ -1,10 +1,10 @@
 #include <Arduino.h>
-#include <BluetoothSerial.h>
 #include <mrm-8x8a.h>
 #include <mrm-board.h>
 #include <mrm-bldc2x50.h>
 #include <mrm-bldc4x2.5.h>
 #include <mrm-can-bus.h>
+#include <mrm-col-b.h>
 #include <mrm-col-can.h>
 #include <mrm-common.h>
 #include <mrm-fet-can.h>
@@ -21,21 +21,22 @@
 #include <mrm-pid.h>
 #include <mrm-ref-can.h>
 #include <mrm-robot.h>
-#include <mrm-robot-line.h>
-#include <mrm-robot-maze.h>
-#include <mrm-robot-min.h>
-#include <mrm-robot-soccer.h>
+#include "mrm-robot-line.h"
+#include "mrm-robot-maze.h"
+#include "mrm-robot-min.h"
+#include "mrm-robot-soccer.h"
 #include <mrm-servo.h>
 #include <mrm-switch.h>
 #include <mrm-therm-b-can.h>
 //#include <mrm-us.h>
-#include <Wire.h>
+#include <mrm-us-b.h>
+#include <mrm-us1.h>
 
 Robot *robot;
 
 void setup() {
-  robot = new RobotLine(); // RobotLine, RobotMaze, RobotMin, RobotSoccer, or Your custom robot
-  robot->run();
+	robot = new RobotMin((char*)"My robot"); // RobotLine, RobotMaze, RobotMin, RobotSoccer, or Your custom robot. "My robot" is Bluetooth name.
+	robot->run();
 }
 
 void loop() {}

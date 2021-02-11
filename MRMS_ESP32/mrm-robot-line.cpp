@@ -602,7 +602,7 @@ void RobotLine::curve() {
 	if (!lineAny(2, 5)) {
 		// Rotate
 		stop();
-		print("CURVE\n\r"); // AAA
+		print("CURVE\n\r"); 
 		delayMs(2000);
 		go(left ? -TOP_SPEED : TOP_SPEED, left ? TOP_SPEED : -TOP_SPEED); // Start rotating.
 		startMs = millis();
@@ -617,7 +617,7 @@ void RobotLine::curve() {
 	// T-crossing approached by side, go ahead.
 	else {
 		stop();
-		print("HALF CROSSING\n\r"); //AAA
+		print("HALF CROSSING\n\r");
 		delayMs(2000);
 	}
 }
@@ -812,23 +812,7 @@ void RobotLine::lineFollow() {
 /** Custom test. The function will be called many times during the test, till You issue "x" menu command.
 */
 void RobotLine::loop() {
-	bool inBend = false;
-	if (line(7))
-		go(-90, 90), inBend = true;
-	else if (line(5))
-		go(-30, 90);
-	else if (line(3))
-		go(90, -60);
-	else if (line(0))
-		go(90, -90), inBend = true;
-	else
-		go(60, 60);
 
-	if (inBend) 
-		sign(83); // S
-
-	else 
-		sign(76); // L
 }
 
 

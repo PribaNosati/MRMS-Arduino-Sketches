@@ -94,7 +94,7 @@ public:
 	/** Constructor
 	@param name - it is also used for Bluetooth so a Bluetooth client (like a phone) will list the device using this name.
 	*/
-	RobotLine(char name[] = (char*)"RCJ Line 1"); // Maximum 15 characters
+	RobotLine(char name[] = (char*)"RCJ Line"); // Maximum 15 characters
 
 	/** Arm will go to ball-catch position.
 	*/
