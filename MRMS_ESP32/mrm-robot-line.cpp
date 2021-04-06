@@ -5,6 +5,7 @@
 #include <mrm-lid-can-b.h>
 #include <mrm-lid-can-b2.h>
 #include <mrm-mot4x3.6can.h>
+#include <mrm-mot4x10.h>
 #include "mrm-robot-line.h"
 #include <mrm-servo.h>
 #include <mrm-therm-b-can.h>
@@ -62,11 +63,16 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 	actionAdd(actionLoop8);
 	actionAdd(actionLoop9);
 
+	// Servo motors. Note that some pins are not appropriate for PWM (servo)
+	mrm_servo->add(18, (char*)"ServoUp", 0, 300, 0.5, 2.5); // Data for mrm-rds5060-300
+	mrm_servo->add(19, (char*)"ServoR", 0, 180, 0.5, 2.5);
+	mrm_servo->add(17, (char*)"ServoL", 0, 180, 0.5, 2.5); 
+
 	// Set buttons' actions.
 	mrm_8x8a->actionSet(actionRCJLine, 0); // Button 0 starts RCJ Line.
 	mrm_8x8a->actionSet(_actionLoop, 1); // Button 1 starts user defined loop() function
-	//mrm_8x8a->actionSet(actionEvacuationZone, 2); // Button 1 starts robot in evacution zone.
-	//mrm_8x8a->actionSet(actionStop, 3); // Stop the robot
+	//mrm_8x8a->actionSet(actionEvacuationZone, 2); // Button 2 starts robot in evacution zone.
+	mrm_8x8a->actionSet(actionStop, 3); // Stop the robot
 
 	// Put Your buttons' actions here.
 
@@ -76,85 +82,53 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 	mrm_mot4x3_6can->directionChange(2); // Uncomment to change 3rd wheel's rotation direction
 	mrm_mot4x3_6can->directionChange(3); // Uncomment to change 4th wheel's rotation direction
 
+	// Digital switches connected to ESP32 pins
+	// pinMode(25, INPUT_PULLDOWN);
+	// pinMode(26, INPUT_PULLDOWN);
+	pinMode(27, INPUT_PULLDOWN);
+	// pinMode(32, INPUT_PULLDOWN);
+	// pinMode(33, INPUT_PULLDOWN);
 }
 
 /** Arm will go to ball-catch position.
 */
 void RobotLine::armCatch() {
 	mrm_servo->write(LIFT_SERVO_DOWN, 0); // Lower the arm. Parameter 0 defines servo, in this case lift-servo. LIFT_SERVO_DOWN is angle.
-	mrm_servo->write(CATCH_SERVO_CLOSE, 1); // Catch the ball. Parameter 1 - catch-servo. CATCH_SERVO_CLOSE is angle.
-	mrm_servo->write(BLOCK_SERVO_BOTH, 2); // Block both.
-	mrm_servo->write(ROTATE_SERVO_DOWN, 3); // Rotate down.
+	mrm_servo->write(CATCH_SERVO_L_CATCH, 1); // Catch the ball. Parameter 1 - catch-servo. CATCH_SERVO_CLOSE is angle.
+	mrm_servo->write(CATCH_SERVO_R_CATCH, 2); // 
 }
 
 /** Arm will go to ball-catch ready position.
 */
 void RobotLine::armCatchReady() {
 	mrm_servo->write(LIFT_SERVO_DOWN, 0); // Lower the arm.
-	mrm_servo->write(CATCH_SERVO_OPEN_FULL, 1); // Open jaws.
-	mrm_servo->write(BLOCK_SERVO_BOTH, 2); // Block both.
-	mrm_servo->write(ROTATE_SERVO_DOWN, 3); // Rotate down.
+	mrm_servo->write(CATCH_SERVO_L_OPEN, 1); // 
+	mrm_servo->write(CATCH_SERVO_R_OPEN, 2); // 
 }
 
-/** Arm will go to idle (top) position.
+/** 
 */
-void RobotLine::armIdle() {
+void RobotLine::armClose() {
+	mrm_servo->write(LIFT_SERVO_DOWN, 0); // Lift the arm.
+	mrm_servo->write(CATCH_SERVO_L_CLOSE, 1); // 
+	mrm_servo->write(CATCH_SERVO_R_CLOSE, 2); // 
+}
+
+
+/** 
+*/
+void RobotLine::armDrop() {
 	mrm_servo->write(LIFT_SERVO_UP, 0); // Lift the arm.
-	mrm_servo->write(CATCH_SERVO_OPEN_FULL, 1); // Open jaws.
-	mrm_servo->write(BLOCK_SERVO_BOTH, 2); // Block both.
-	mrm_servo->write(ROTATE_SERVO_DOWN, 3); // Rotate down.
-} 
-
-/** Arm will put the ball left
-*/
-void RobotLine::armLeftPut() {
-	mrm_servo->write(LIFT_SERVO_PUT_BACK, 0); // Lift the arm.
-	mrm_servo->write(CATCH_SERVO_OPEN_MIN, 1); // Open jaws.
-	mrm_servo->write(BLOCK_SERVO_BOTH, 2); // Block both.
-	mrm_servo->write(ROTATE_SERVO_LEFT, 3); // Rotate left.
+	mrm_servo->write(CATCH_SERVO_L_OPEN, 1); // 
+	mrm_servo->write(CATCH_SERVO_R_OPEN, 2); // 
 }
 
-/** Arm will go to top left position
+/** 
 */
-void RobotLine::armLeftReady() {
-	mrm_servo->write(LIFT_SERVO_BACK, 0); // Lift the arm.
-	mrm_servo->write(CATCH_SERVO_CLOSE, 1); // Close jaws.
-	mrm_servo->write(BLOCK_SERVO_BOTH, 2); // Block both.
-	mrm_servo->write(ROTATE_SERVO_LEFT, 3); // Rotate left.
-}
-
-/** Arm will drop the ball.
-*/
-void RobotLine::armPut() {
-	mrm_servo->write(LIFT_SERVO_PUT_FRONT, 0); // Lift the arm halfways.
-	mrm_servo->write(CATCH_SERVO_OPEN_FULL, 1); // Open jaws.
-	mrm_servo->write(BLOCK_SERVO_BOTH, 2); // Block both.
-}
-
-/** Arm will lift the caught ball in the position where will be ready to drop it.
-*/
-void RobotLine::armPutReady() {
-	mrm_servo->write(LIFT_SERVO_PUT_FRONT, 0); // Lift the arm halfways.
-	mrm_servo->write(CATCH_SERVO_CLOSE, 1); // Keep the ball in jaws.
-	mrm_servo->write(BLOCK_SERVO_BOTH, 2); // Block both.
-}
-
-/** Arm will put the ball right
-*/
-void RobotLine::armRightPut() {
-	mrm_servo->write(LIFT_SERVO_PUT_BACK, 0); // Lift the arm.
-	mrm_servo->write(CATCH_SERVO_OPEN_MIN, 1); // Open jaws.
-	mrm_servo->write(BLOCK_SERVO_BOTH, 2); // Block both.
-	mrm_servo->write(ROTATE_SERVO_RIGHT, 3); // Rotate right.
-}
-
-/** Arm will go to top right position
-*/
-void RobotLine::armRightReady() {
-	mrm_servo->write(LIFT_SERVO_BACK, 0); // Lift the arm.
-	mrm_servo->write(CATCH_SERVO_CLOSE, 1); // Close jaws.
-	mrm_servo->write(BLOCK_SERVO_BOTH, 2); // Block both.
-	mrm_servo->write(ROTATE_SERVO_RIGHT, 3); // Rotate right.
+void RobotLine::armUp() {
+	mrm_servo->write(LIFT_SERVO_UP, 0); // Lift the arm.
+	mrm_servo->write(CATCH_SERVO_L_CATCH, 1); // 
+	mrm_servo->write(CATCH_SERVO_R_CATCH, 2); // 
 }
 
 /** Barrier interrupted?
@@ -608,7 +582,7 @@ void RobotLine::curve() {
 		startMs = millis();
 		while (millis() - startMs < 1300) { // Rotate until center line found, unless timeout expires.
 			if (line(LAST_TRANSISTOR / 2)) { // Line in center?
-				delayMs(150); // Align better
+				// delayMs(150); // Align better
 				return;
 			}
 			noLoopWithoutThis();
@@ -639,45 +613,52 @@ void RobotLine::display(ledSign image) {
 /** Enter evacuation-zone algorithm
 */
 void RobotLine::evacuationZone() {
-	if (setup()) {
-		// Signal evacuation zone
-		display(LED_EVACUATION_ZONE);
-		stop();
-		armIdle();// armCatchReady();
-		delayMs(300); // Wait for arm lowering.
-		barrierBrightest = analogRead(35); // Calibrate barrier according to actual external illumination
-	}
+	// if (setup()) {
+	// 	// Signal evacuation zone
+	// 	display(LED_EVACUATION_ZONE);
+	// 	stop();
+	// 	armClose();// armCatchReady();
+	// 	delayMs(300); // Wait for arm lowering.
+	// 	barrierBrightest = analogRead(35); // Calibrate barrier according to actual external illumination
+	// }
 
-	wallFollow();
+	// wallFollow();
 
-	// Ball found
-	if (barrier()) {
-		stop();
-		armCatch();
-		delayMs(1000);
-		armPutReady();
-		//go(50, 50);
-		delayMs(1000);
-		//stop();
-		armPut();
-		delay(1000);
-		armIdle();
-		end();
-	}
+	// // Ball found
+	// if (barrier()) {
+	// 	stop();
+	// 	armCatch();
+	// 	delayMs(1000);
+	// 	armUp();
+	// 	//go(50, 50);
+	// 	delayMs(1000);
+	// 	//stop();
+	// 	armDrop();
+	// 	delay(1000);
+	// 	armClose();
+	// 	end();
+	// }
+}
+
+/** Front sensor distance.
+@return - in mm
+*/
+uint16_t RobotLine::front() {
+	return mrm_lid_can_b->reading(1); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Front side - left sensor distance.
 @return - in mm
 */
 uint16_t RobotLine::frontLeft() {
-	return mrm_lid_can_b->reading(1); // Correct all sensors so that they return the same value for the same physical distance.
+	return mrm_lid_can_b->reading(0); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Front side - right sensor distance.
 @return - in mm
 */
 uint16_t RobotLine::frontRight() {
-	return mrm_lid_can_b->reading(5); // Correct all sensors so that they return the same value for the same physical distance.
+	return mrm_lid_can_b->reading(2); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Start motors
@@ -686,7 +667,7 @@ uint16_t RobotLine::frontRight() {
 @param speedLimit - Speed limit, 0 to 127. For example, 80 will limit all the speeds to 80/127%. 0 will turn the motors off.
 */
 void RobotLine::go(int16_t leftSpeed, int16_t rightSpeed) {
-	motorGroup->go(leftSpeed, leftSpeed);
+	motorGroup->go(leftSpeed, rightSpeed);
 }
 
 /** Test - go straight ahead using a defined speed.
@@ -761,58 +742,88 @@ float RobotLine::lineCenter() {
 /** Follow a RCJ line.
 */
 void RobotLine::lineFollow() {
-	static uint32_t lastLineFoundMs = millis(); // Used to measure gap in line.
+	if (line(8))
+		go(-90, 90);
+	else if (line(0))
+		go(90, -90);
+	else if (line(5))
+		go(10, 90);
+	else if (line(3))
+		go(90, 10);
+	else
+		go(60, 60);
+	// static uint32_t lastLineFoundMs = millis(); // Used to measure gap in line.
 
-	// Obstacle?
-	if (frontLeft() < 50 && frontLeft() != 0) { // Front sensor (1).
-		//print("Obstacle: %i\n\r", frontLeft()); // For debugging.
-		stop(); // Stop.
-		delayMs(50); // Wait a little before another measurement to be sure that the lidar has enough time to send a fresh measurement.
-		if (frontLeft() < 50) { // Check one more time. If detected again, this will be an obstacle.
-			actionSet(actionObstacleAvoid); // Sets the new action.
-			actionObstacleAvoid->leftOfObstacle = (leftFront() > leftFront()); // Decides if go left or right, depending on space available.
-			return;
-		}
-	}
+	// // Obstacle?
+	// #define OBSTACLE 0
+	// #if OBSTACLE
+	// if (frontLeft() < 50 && frontLeft() != 0) { // Front sensor (1).
+	// 	//print("Obstacle: %i\n\r", frontLeft()); // For debugging.
+	// 	stop(); // Stop.
+	// 	delayMs(50); // Wait a little before another measurement to be sure that the lidar has enough time to send a fresh measurement.
+	// 	if (frontLeft() < 50) { // Check one more time. If detected again, this will be an obstacle.
+	// 		actionSet(actionObstacleAvoid); // Sets the new action.
+	// 		actionObstacleAvoid->leftOfObstacle = (leftFront() > leftFront()); // Decides if go left or right, depending on space available.
+	// 		return;
+	// 	}
+	// }
+	// #endif
 
-	// Line found?
-	if (lineAny(true)) {
-		// Both edge sensors and middle sensor? Crossing. Check markers.
-		if (line(0) && line(LAST_TRANSISTOR / 2) && line(LAST_TRANSISTOR)) {
-			// Green markers?
-			if (!markers()) {// No mark detected. Go straight ahead.
-				display(LED_FULL_CROSSING_NO_MARK); // Show sign.
-				//delayMs(1000);
-				go(TOP_SPEED, TOP_SPEED);
-				delayMs(AHEAD_IN_CROSSING); // Make sure to cross the crossing.
-			}
-		}
-		// Edge sensor? If so, sharp bend.
-		else if (line(0) || line(LAST_TRANSISTOR))
-			curve();
-		else {
-			// Follow line
-			float lineCenterNow = lineCenter(); // mrm-ref-can returns center of line, between -50 and 50 (mm).
-			// Calculate slower motor's speed. The other one will run at top speed.
-			go(lineCenterNow < 0 ? TOP_SPEED : TOP_SPEED - lineCenterNow * 4, lineCenterNow < 0 ? TOP_SPEED + lineCenterNow * 4 : TOP_SPEED);
-			display(LED_LINE_FULL);
-		}
-		lastLineFoundMs = millis(); // Mark last time line detected.
-	}
-	// No line found for a long time -> evacuation area.
-	else if (millis() - lastLineFoundMs > BIGGEST_GAP_IN_LINE_MS)
-		actionSet(actionEvacuationZone);
-	// No line found for s short time -> gap in line, continue straight ahead.
-	else {
-		go(TOP_SPEED, TOP_SPEED);
-		display(LED_LINE_INTERRUPTED);
-	}
+	// // Line found?
+	// if (lineAny(true)) {
+	// 	#define CROSSINGS 0
+	// 	#if CROSSINGS
+	// 	// Both edge sensors and middle sensor? Crossing. Check markers.
+	// 	if (line(0) && line(LAST_TRANSISTOR / 2) && line(LAST_TRANSISTOR)) {
+	// 		// Green markers?
+	// 		if (!markers()) {// No mark detected. Go straight ahead.
+	// 			display(LED_FULL_CROSSING_NO_MARK); // Show sign.
+	// 			//delayMs(1000);
+	// 			go(TOP_SPEED, TOP_SPEED);
+	// 			delayMs(AHEAD_IN_CROSSING); // Make sure to cross the crossing.
+	// 		}
+	// 	}
+	// 	// Edge sensor? If so, sharp bend.
+	// 	else 
+	// 	#endif
+	// 	if (line(0) || line(LAST_TRANSISTOR))
+	// 		curve();
+	// 	else {
+	// 		// Follow line
+	// 		float lineCenterNow = lineCenter(); // mrm-ref-can returns center of line, between -50 and 50 (mm).
+	// 		// Calculate slower motor's speed. The other one will run at top speed.
+	// 		go(lineCenterNow < 0 ? TOP_SPEED : TOP_SPEED - lineCenterNow * 8, lineCenterNow < 0 ? TOP_SPEED + lineCenterNow * 8 : TOP_SPEED);
+	// 		display(LED_LINE_FULL);
+	// 	}
+	// 	lastLineFoundMs = millis(); // Mark last time line detected.
+	// }
+	// // No line found for a long time -> evacuation area.
+	// else if (millis() - lastLineFoundMs > BIGGEST_GAP_IN_LINE_MS)
+	// 	actionSet(actionEvacuationZone);
+	// // No line found for s short time -> gap in line, continue straight ahead.
+	// else {
+	// 	go(TOP_SPEED, TOP_SPEED);
+	// 	display(LED_LINE_INTERRUPTED);
+	// }
 }
 
 /** Custom test. The function will be called many times during the test, till You issue "x" menu command.
 */
 void RobotLine::loop() {
-
+	if (front() < 100){
+		go(-50, 50);
+		delayMs(500);
+		while(!lineAny())
+			noLoopWithoutThis();
+	}
+	else{
+		if (line(5))
+			go(10, 80);
+		else if (line(3))
+			go(80, 10);
+		else
+			go(60, 60);
+	}
 }
 
 
@@ -820,14 +831,36 @@ void RobotLine::loop() {
 */
 void RobotLine::loop0() { print("%i\n\r", analogRead(35)); }
 void RobotLine::loop1() { armCatchReady(); end(); }
-void RobotLine::loop2() { armIdle(); end(); }
+void RobotLine::loop2() { armUp(); end(); }
 void RobotLine::loop3() { actionSet(actionEvacuationZone); }
 void RobotLine::loop4() { armCatch(); end(); }
 void RobotLine::loop5() { mrm_fet_can->test(); }
-void RobotLine::loop6() {}
-void RobotLine::loop7() {}
-void RobotLine::loop8() {}
-void RobotLine::loop9() {}
+void RobotLine::loop6() {armDrop(); end(); }
+void RobotLine::loop7() {armClose();}
+void RobotLine::loop8() {
+	static int speed = 0;
+	static int step = 1;
+	go(speed , speed );
+	speed += step;
+	if (speed == -127)
+		step = 1;
+	else if (speed == 127)
+		step = -1;
+	print("%i\n\r", speed);
+	delayMs(3);
+}
+void RobotLine::loop9() {
+	armCatchReady();
+	delayMs(2000);
+	armCatch();
+	delayMs(2000);
+	armUp();
+	delayMs(2000);
+	armDrop();
+	delayMs(2000);
+	armClose();
+	delayMs(2000);
+}
 
 /** Generic menu
 */
@@ -886,58 +919,76 @@ bool RobotLine::markers() {
 /** Avoid an obstacle on line.
 */
 void RobotLine::obstacleAvoid() {
-	// Static variables - their value will be retained between this function's calls, just like with global variables, but they have local scope.
-	static uint8_t part = 0;
-	static uint32_t startMs = 0;
-
-	// This function will be executed many times during obstacle avoiding action, but only the first time the action (ActionObstacleAvoid) is executed will
-	// "setup()" be true, thus executing the next instruction (showing a sign).
-	if (setup())
-		display(LED_OBSTACLE); // Show a sign.
-
-	/* Obstacle evasive maneuver is an action big enough to justify its own ActionBase derived object, ActionObstacleAvoid, which is being executed right now. 
-	The maneuver itself consists of	different phases. Should all of them form ActionObstacleAvoid derived classes? Yes, that would be a good solution. However, 
-	here we will show a solution that is not object oriented: a "switch" statement. During many runs of this function, static variable "part" will be slowly 
-	changing its value from 0 up, marking different phases. The logic follows.
-	*/
-	switch (part) {
-	case 0: // Turn in place in front of obstacle.
-		if (frontLeft() < 60 || lineAny()) // If obstacle is still in front or robot still on line - continue rotating.
-			// Read the member variable of the current action (of class ActionObstacleAvoid) to determine direction of rotation.
-			go(actionObstacleAvoid->leftOfObstacle ? -100 : 100, actionObstacleAvoid->leftOfObstacle ? 100 : -100);
-		else { // No more obastacle or line.
-			part = 1; // Advance to next phase.
-			startMs = millis(); // Mark phase's beginning.
-		}
-		break;
-	case 1: // Continue turning even more.
-		if (millis() - startMs > 50) { // A fixed number of milliseconds (50) is not the best solution, but it is here for demonstration purposes.
-			part = 2; // Rotation over, advance to next phase.
-			display(actionObstacleAvoid->leftOfObstacle ? LED_OBSTACLE_AROUND_LEFT : LED_OBSTACLE_AROUND_RIGHT); // Show sign.
-		}
-		break;
-	case 2: // Go around obstacle
-		// One of 2 middle sensors found a line?
-		if (line(4) || line(5)) { // Yes, the line found again.
-			go(actionObstacleAvoid->leftOfObstacle ? -100 : 100, actionObstacleAvoid->leftOfObstacle ? 100 : -100); // Start aligning with the line.
-			part = 3; // Advance to next phase.
-		}
-		// No line found, continue going around the obstacle.
+	stop();
+	delayMs(1000);
+	print("Prije");
+	go(50, -50);
+	while (front() < 200 || frontLeft() < 200 || lineAny())
+		noLoopWithoutThis();
+	stop();
+	delayMs(2000);
+	while(!lineAny()){
+		if (front() < 200 || frontLeft() < 200)
+			go(50, 50);
 		else
-			// Here the fixed motors' speed are used - and that is not good. You should improve this action by feeding some sensors' output back into this motor-driving loop.
-			go(actionObstacleAvoid->leftOfObstacle ? 95 : 30, actionObstacleAvoid->leftOfObstacle ? 30 : 95);
-		break;
-	case 3: // Align with the found line. To do that, continue rotating till an near-edge sensor finds the line.
-		if (line(actionObstacleAvoid->leftOfObstacle ? 1 : 7))
-			part = 4; // Advance to next phase.
-		break;
-	case 4: // Follow line again.
-	default:
-		part = 0; // This is the last phase so reset "part" variable for the next obstacle.
-		actionSet(actionLineFollow); // As the robot is now on line, set the current action to line following.
-		actionPreprocessingEnd();
-		break;
+			go(20, 80);
+		noLoopWithoutThis();
 	}
+	stop();
+	delayMs(1000);
+	print("Linija");
+	// // Static variables - their value will be retained between this function's calls, just like with global variables, but they have local scope.
+	// static uint8_t part = 0;
+	// static uint32_t startMs = 0;
+
+	// // This function will be executed many times during obstacle avoiding action, but only the first time the action (ActionObstacleAvoid) is executed will
+	// // "setup()" be true, thus executing the next instruction (showing a sign).
+	// if (setup())
+	// 	display(LED_OBSTACLE); // Show a sign.
+
+	// /* Obstacle evasive maneuver is an action big enough to justify its own ActionBase derived object, ActionObstacleAvoid, which is being executed right now. 
+	// The maneuver itself consists of	different phases. Should all of them form ActionObstacleAvoid derived classes? Yes, that would be a good solution. However, 
+	// here we will show a solution that is not object oriented: a "switch" statement. During many runs of this function, static variable "part" will be slowly 
+	// changing its value from 0 up, marking different phases. The logic follows.
+	// */
+	// switch (part) {
+	// case 0: // Turn in place in front of obstacle.
+	// 	if (frontLeft() < 60 || lineAny()) // If obstacle is still in front or robot still on line - continue rotating.
+	// 		// Read the member variable of the current action (of class ActionObstacleAvoid) to determine direction of rotation.
+	// 		go(actionObstacleAvoid->leftOfObstacle ? -100 : 100, actionObstacleAvoid->leftOfObstacle ? 100 : -100);
+	// 	else { // No more obastacle or line.
+	// 		part = 1; // Advance to next phase.
+	// 		startMs = millis(); // Mark phase's beginning.
+	// 	}
+	// 	break;
+	// case 1: // Continue turning even more.
+	// 	if (millis() - startMs > 50) { // A fixed number of milliseconds (50) is not the best solution, but it is here for demonstration purposes.
+	// 		part = 2; // Rotation over, advance to next phase.
+	// 		display(actionObstacleAvoid->leftOfObstacle ? LED_OBSTACLE_AROUND_LEFT : LED_OBSTACLE_AROUND_RIGHT); // Show sign.
+	// 	}
+	// 	break;
+	// case 2: // Go around obstacle
+	// 	// One of 2 middle sensors found a line?
+	// 	if (line(4) || line(5)) { // Yes, the line found again.
+	// 		go(actionObstacleAvoid->leftOfObstacle ? -100 : 100, actionObstacleAvoid->leftOfObstacle ? 100 : -100); // Start aligning with the line.
+	// 		part = 3; // Advance to next phase.
+	// 	}
+	// 	// No line found, continue going around the obstacle.
+	// 	else
+	// 		// Here the fixed motors' speed are used - and that is not good. You should improve this action by feeding some sensors' output back into this motor-driving loop.
+	// 		go(actionObstacleAvoid->leftOfObstacle ? 95 : 30, actionObstacleAvoid->leftOfObstacle ? 30 : 95);
+	// 	break;
+	// case 3: // Align with the found line. To do that, continue rotating till an near-edge sensor finds the line.
+	// 	if (line(actionObstacleAvoid->leftOfObstacle ? 1 : 7))
+	// 		part = 4; // Advance to next phase.
+	// 	break;
+	// case 4: // Follow line again.
+	// default:
+	// 	part = 0; // This is the last phase so reset "part" variable for the next obstacle.
+	// 	actionSet(actionLineFollow); // As the robot is now on line, set the current action to line following.
+	// 	actionPreprocessingEnd();
+	// 	break;
+	// }
 }
 
 /** Choose a pattern closest to the current 6 colors
@@ -959,12 +1010,15 @@ float RobotLine::pitch() {
 /** Starts the RCJ Line run after this action selected.
 */
 void RobotLine::rcjLine() {
-	mrm_8x8a->rotationSet(LED_8X8_BY_90_DEGREES); // Rotate the mrm-8x8a by 90� so that it can be read properly when standing behind the robot.
-	bitmapsSet(); // Upload all the predefined bitmaps into the mrm-8x8a.
-	display(LED_PLAY); // Show "play" sign.
-	mrm_col_can->illumination(0xFF, 1); // Turn mrm-col-can's surface illumination on.
-	armIdle(); // Arm will go to its idle (up) position.
-	actionSet(actionLineFollow); // The next action is line following.
+	lineFollow();
+	if (front() < 100)
+		obstacleAvoid();
+	// mrm_8x8a->rotationSet(LED_8X8_BY_90_DEGREES); // Rotate the mrm-8x8a by 90� so that it can be read properly when standing behind the robot.
+	// bitmapsSet(); // Upload all the predefined bitmaps into the mrm-8x8a.
+	// display(LED_PLAY); // Show "play" sign.
+	// mrm_col_can->illumination(0xFF, 1); // Turn mrm-col-can's surface illumination on.
+	// armClose(); // Arm will go to its idle (up) position.
+	// actionSet(actionLineFollow); // The next action is line following.
 }
 
 /** Right side - rear sensor distance.

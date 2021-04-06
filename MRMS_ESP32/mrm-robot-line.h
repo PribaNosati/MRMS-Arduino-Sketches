@@ -5,24 +5,16 @@
 // Change these values to get optimal robot's behaviour.
 
 // CATCH_SERVO drives jaws that catch ball.
-#define CATCH_SERVO_CLOSE 260 // Closed position, ball caught.
-#define CATCH_SERVO_OPEN_FULL 50 // Open position, ready to catch a ball.
-#define CATCH_SERVO_OPEN_MIN 150 // Open just to drop the ball
+#define CATCH_SERVO_L_CATCH 30
+#define CATCH_SERVO_L_CLOSE 0 // Closed position, ball caught.
+#define CATCH_SERVO_L_OPEN 90 // Open position, ready to catch a ball.
+#define CATCH_SERVO_R_CATCH 60
+#define CATCH_SERVO_R_CLOSE 90 // Closed position, ball caught.
+#define CATCH_SERVO_R_OPEN 0 // Open position, ready to catch a ball.
 
-// LIFT_SERVO lifts catch servo and the rest of mechanism.
-#define LIFT_SERVO_BACK 70 // Top (idle) position.
-#define LIFT_SERVO_DOWN 150 // Lowest position, catching a ball.
-#define LIFT_SERVO_PUT_BACK 50
-#define LIFT_SERVO_PUT_FRONT 80 // Middle position, for caught ball dropping.
-#define LIFT_SERVO_UP 10 // Top (idle) position.
-
-// ROTATE_SERVO rotates gripper
-#define ROTATE_SERVO_DOWN 300
-#define ROTATE_SERVO_LEFT 90
-#define ROTATE_SERVO_RIGHT 125
-
-// BLOCK_SERVO blocks balls
-#define BLOCK_SERVO_BOTH 150
+// LIFT_SERVO lifts catch the mechanism.
+#define LIFT_SERVO_DOWN 80 // Lowest position, catching a ball.
+#define LIFT_SERVO_UP 120 // Top (idle) position.
 
 #define LIDAR_COUNT 6 // 3 or 6, depending on model. If only 3 lidars built in, 6-mode cannot be used.
 
@@ -62,7 +54,7 @@ class RobotLine : public Robot {
 	uint16_t BIGGEST_GAP_IN_LINE_MS = 2500;
 	// Changing this parameter will cause major behaviour change. Limit value: 127.
 	const uint8_t TOP_SPEED = 90; // 7.4 V 80	11.1 V 60
-	const uint16_t AHEAD_IN_CROSSING = 200; // 7.4V : 300
+	const uint16_t AHEAD_IN_CROSSING = 210; // 7.4V : 300
 	const uint8_t LAST_TRANSISTOR = 7; // mrm-ref-can: 8, mrm-ref-can8: 7
 
 	// Actions' declarations
@@ -104,33 +96,15 @@ public:
 	*/
 	void armCatchReady();
 
-	/** Arm will go to idle (top) position.
-	*/
-	void armIdle();
-
-	/** Arm will put the ball left
-	*/
-	void armLeftPut();
-
-	/** Arm will go to top left position
-	*/
-	void armLeftReady();
+	void armClose();
 
 	/** Arm will drop the ball.
 	*/
-	void armPut();
+	void armDrop();
 
 	/** Arm will lift the caught ball in the position where will be ready to drop it.
 	*/
-	void armPutReady();
-
-	/** Arm will put the ball right
-	*/
-	void armRightPut();
-
-	/** Arm will go to top right position
-	*/
-	void armRightReady();
+	void armUp();
 
 	/** Barrier interrupted?
 	* return interrupted or not
@@ -170,6 +144,11 @@ public:
 	/** Enter evacuation-zone algorithm.
 	*/
 	void evacuationZone();
+
+	/** Front sensor distance.
+	@return - in mm
+	*/
+	uint16_t front();
 
 	/** Front side - left sensor distance.
 	@return - in mm
