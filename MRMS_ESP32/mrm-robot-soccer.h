@@ -164,7 +164,7 @@ public:
 	ActionSoccerPlay(RobotSoccer* robot) : ActionBase(robot, "soc", "Soccer play") {}
 };
 
-/** Idle position, before own goal. 
+/** Idle position, before own goal.
 */
 class ActionSoccerIdle : public ActionBase {
 	void perform() { ((RobotSoccer*)_robot)->idle(); }

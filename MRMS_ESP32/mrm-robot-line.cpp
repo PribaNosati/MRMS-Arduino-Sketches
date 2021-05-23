@@ -88,6 +88,9 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 	pinMode(27, INPUT_PULLDOWN);
 	// pinMode(32, INPUT_PULLDOWN);
 	// pinMode(33, INPUT_PULLDOWN);
+
+	// If uncommented, robot will immediately after power-on start executing loop()
+	//actionSet(_actionLoop);
 }
 
 /** Arm will go to ball-catch position.
@@ -610,6 +613,14 @@ void RobotLine::display(ledSign image) {
 	mrm_8x8a->bitmapCustomStoredDisplay(image);
 }
 
+/** Display 8x8 text
+@image - image's number
+*/
+void RobotLine::display(char* text) {
+	mrm_8x8a->text(text);
+}
+
+
 /** Enter evacuation-zone algorithm
 */
 void RobotLine::evacuationZone() {
@@ -810,22 +821,10 @@ void RobotLine::lineFollow() {
 /** Custom test. The function will be called many times during the test, till You issue "x" menu command.
 */
 void RobotLine::loop() {
-	if (front() < 100){
-		go(-50, 50);
-		delayMs(500);
-		while(!lineAny())
-			noLoopWithoutThis();
-	}
-	else{
-		if (line(5))
-			go(10, 80);
-		else if (line(3))
-			go(80, 10);
-		else
-			go(60, 60);
-	}
+	if (setup())
+		illumination(1, 0);
+	print("%i\n\r", green(0));
 }
-
 
 /** Generic actions, use them as templates
 */

@@ -35,7 +35,7 @@ RobotMaze::RobotMaze(char name[]) : Robot(name) {
 
 	// The actions that should be displayed in menus must be added to menu-callable actions. You can use action-objects defined
 	// right above, or can create new objects. In the latter case, the inline-created objects will have no pointer and cannot be
-	// called in the code, but only through menus. For example, ActionWallsTest test is only manu-based, and it is all right. 
+	// called in the code, but only through menus. For example, ActionWallsTest test is only manu-based, and it is all right.
 	// This test is not supposed to be called in code.
 	actionAdd(actionRescueMaze);
 	actionAdd(new ActionOmniWheelsTest(this));
@@ -76,7 +76,7 @@ void RobotMaze::bitmapsSet() {
 		red[i] = 0;
 	/* Store this bitmap in mrm-8x8a. The 3rd parameter is bitmap's address. If You want to define new bitmaps, expand LedSign enum with
 	Your names, and use the new values for Your bitmaps. This parameter can be a plain number, but enum keeps thing tidy.*/
-	mrm_8x8a->bitmapCustomStore(red, green, LedSign::MAZE_LED_PAUSE); 
+	mrm_8x8a->bitmapCustomStore(red, green, LedSign::MAZE_LED_PAUSE);
 	delayMs(1); // Wait a little in order not to queue too many CAN Buss messages at once.
 
 	// Play.
@@ -139,7 +139,7 @@ void RobotMaze::bitmapsSet() {
 }
 
 
-/** Function that decides what to do next, using Tremaux algorithm. If a not-visited direction exists, go that route. 
+/** Function that decides what to do next, using Tremaux algorithm. If a not-visited direction exists, go that route.
 If not, return to the tile robot came from.
 */
 void RobotMaze::decide(){
@@ -159,10 +159,10 @@ void RobotMaze::decide(){
 			/* Break the for loop. Note that this instruction significantly defines robot's behavior. Like this, it will always choose
 			the first free tile in the direction of the "for" loop (CCW). The direction of the loop could be changed to CW or some other strategy
 			could be chosen, like "always go straight, if possible".*/
-			break; 
+			break;
 		}
 	}
-	if (actionMove->direction == Direction::NOWHERE){ // No direction found, so go back using breadcrumbs.
+	if (actionMove->direction == Direction::NOWHERE) { // No direction found, so go back using breadcrumbs.
 		if (tileCurrent->breadcrumb == Direction::NOWHERE) {//We are on the first tile and there is no way back - end of run.
 			end(); // This command will cancel actions and the robot will return to the default idle loop, after displaying menu.
 			mrm_8x8a->bitmapCustomStoredDisplay(LedSign::MAZE_LED_PAUSE); // Display pause sign.
@@ -336,7 +336,7 @@ void RobotMaze::move() {
 void RobotMaze::moveAhead() {
 	bool encodersOver = false; // One tile's length covered. Used only when encoders available.
 	// When encoders available, timeout is only a safety measure, to avoid possible endless loop. When not, it marks end of tile.
-	bool timeOver = millis() - actionMoveAhead->startMs > MOVE_AHEAD_TIMEOUT_MS; 
+	bool timeOver = millis() - actionMoveAhead->startMs > MOVE_AHEAD_TIMEOUT_MS;
 
 	// If any of the 3 conditions satisfied, break the movement: encoder, timeout, or a wall to close ahead.
 	if (encodersOver || timeOver || distance(directionCurrent, false) < WALL_FOLLOW_DISTANCE || distance(directionCurrent, true) < WALL_FOLLOW_DISTANCE) {
@@ -362,7 +362,7 @@ void RobotMaze::moveAhead() {
 		else { // No such a tile. Therefore, this coordinate has not been visited yet. We have to create a new Tile object.
 			print("new tile\n\r");
 			// Set the position to a newly created tile, with new (x, y) coordinates. Breadcrumb direction will be the opposite direction to the current one.
-			tileCurrent = new Tile(newX, newY, (Direction)((directionCurrent + 2) % 4)); 
+			tileCurrent = new Tile(newX, newY, (Direction)((directionCurrent + 2) % 4));
 			actionSet(actionMap); // The next action will be tile mapping as this is a new tile and its walls are not mapped yet.
 		}
 	}
@@ -385,7 +385,7 @@ void RobotMaze::moveTurn() {
 		motorGroup->stop();
 		directionCurrent = actionMove->direction; // Robot's direction changed after turn so store the new value.
 		// Remember the new heading that IMU following algorithm uses. If no wall to alignment after turn, this value will be used immediately.
-		imuLastValid = actionMoveTurn->endAngle; 
+		imuLastValid = actionMoveTurn->endAngle;
 		actionSet(actionDecide); // After rotation, the tile stays the same, and no mapping will be needed. The new action is decision what to do next.
 	}
 
@@ -455,7 +455,7 @@ void RobotMaze::omniWheelsTest() {
 void RobotMaze::rescueMaze() {
 	print("Maze start\n\r");
 	// mrm-8x8a is positioned so that its bottom is aligned robot's left side. Rotate the display so that the image is aligned with robot's back.
-	mrm_8x8a->rotationSet(LED_8X8_BY_90_DEGREES); 
+	mrm_8x8a->rotationSet(LED_8X8_BY_90_DEGREES);
 	bitmapsSet(); // Upload custom bitmaps into mrm-8x8a.
 	mrm_8x8a->bitmapCustomStoredDisplay(LedSign::MAZE_LED_PLAY); // Display play sign.
 	Tile::first = new Tile(0, 0, NOWHERE); // Set the first tile and start the chain. Tile::first will point to its head, enabling iterating.
@@ -659,7 +659,7 @@ void RobotMaze::wallsTest() {
 @param direction.
 @return x coordinate.
 */
-int8_t RobotMaze::x(Direction direction) { 
+int8_t RobotMaze::x(Direction direction) {
 	// A trivial calculation.
 	if (direction == Direction::LEFT)
 		return tileCurrent->x - 1;

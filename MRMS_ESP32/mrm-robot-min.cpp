@@ -31,7 +31,7 @@ RobotMin::RobotMin(char name[]) : Robot(name) {
 
 	// The actions that should be displayed in menus must be added to menu-callable actions. You can use action-objects defined
 	// right above, or can create new objects. In the latter case, the inline-created objects will have no pointer and cannot be
-	// called in the code, but only through menus. For example, ActionWallsTest test is only manu-based, and it is all right. 
+	// called in the code, but only through menus. For example, ActionWallsTest test is only manu-based, and it is all right.
 	// This test is not supposed to be called in code.
 
 
@@ -48,7 +48,32 @@ RobotMin::RobotMin(char name[]) : Robot(name) {
 /** Custom test. The function will be called many times during the test, till You issue "x" menu-command.
 */
 void RobotMin::loop() {
+	#define TEST1 0
+	#if TEST1
+	// if (setup()){
+	// 	mrm_bldc4x2_5->speedSet(0, 127);
+	// 	delayMs(1000);
+	// 	mrm_bldc4x2_5->stop();
+	// 	end();
+	// }
+
+	// static int16_t speed = 120;
+	// 	mrm_bldc4x2_5->speedSet(0, speed);
+	// 	print("%i\n\r", speed);
+
+	// 	delayMs(2000);
+	// speed = -speed;
+	if (setup()){
+		// // mrm_bldc4x2_5->start();
+		mrm_bldc4x2_5->speedSet(0, 20);
+	}
+	print("Enc:%i\n\r", mrm_bldc4x2_5->reading(0));
+	#endif
+
+	#define TEST2 0
+	#if TEST2
 	#define OUTPUT_MOTORS 0
+	#define TOP_SPEED_TEST 30
 	// if (setup()) { // This part will execute only in the first run.
 	// 	pinMode(27, OUTPUT);
 	// 	pinMode(26, INPUT);
@@ -69,7 +94,7 @@ void RobotMin::loop() {
 	else
 		speed--;
 	// Change motor's direction
-	if ((up && speed > 127) || (!up && speed < -127))
+	if ((up && speed > TOP_SPEED_TEST) || (!up && speed < -TOP_SPEED_TEST))
 		up = !up;
 
 	// mrm-mot4x10
@@ -84,11 +109,13 @@ void RobotMin::loop() {
 	// }
 
 	
+	#define MRM_LID_CAN_B 1
+	#if MRM_LID_CAN_B
 	// mrm-lid-can-b
 	static uint32_t lastLidarMs = 0;
 	static uint16_t lidarLast[3];
 	static uint16_t lidarCount[3];
-	if (millis() - lastLidarMs > 150)
+	if (millis() - lastLidarMs > 150){
 		lastLidarMs = millis();
 		for (uint8_t i = 0; i < 3; i++){
 			if (mrm_lid_can_b->reading(i) == lidarLast[i] && mrm_lid_can_b->reading(i) != 2000){
@@ -103,6 +130,32 @@ void RobotMin::loop() {
 				lidarCount[i] = 0;
 			lidarLast[i] = mrm_lid_can_b->reading();
 		}
+	}
+	#endif
+
+	#define MRM_LID_CAN_B2 1
+	#if MRM_LID_CAN_B2
+	// mrm-lid-can-b2
+	static uint32_t lastLidar4Ms = 0;
+	static uint16_t lidar4Last[3];
+	static uint16_t lidar4Count[3];
+	if (millis() - lastLidar4Ms > 150){
+		lastLidar4Ms = millis();
+		for (uint8_t i = 0; i < 3; i++){
+			if (mrm_lid_can_b2->reading(i) == lidar4Last[i] && mrm_lid_can_b2->reading(i) != 2000){
+				lidar4Count[i]++;
+				if (lidar4Count[i] > 300){
+					print("Lidar stopped.");
+					mrm_8x8a->bitmapDisplay('L');
+					ok = false;
+				}
+			}
+			else
+				lidar4Count[i] = 0;
+			lidar4Last[i] = mrm_lid_can_b2->reading();
+		}
+	}
+	#endif
 
 	// mrm-ref-can
 	static uint32_t lastRefMs = 0;
@@ -129,9 +182,16 @@ void RobotMin::loop() {
 	static uint8_t timeCnt = 0;
 	static uint32_t lastDisplayMs = 0;
 	if (millis() - lastDisplayMs > 500){
+		#if MRM_LID_CAN_B
 		print("Lid:");
 		for (uint8_t i = 0; i < 3; i++)
 			print("%i ", mrm_lid_can_b->reading(i));
+		#endif
+		#if MRM_LID_CAN_B2
+		print("Lid:");
+		for (uint8_t i = 0; i < 3; i++)
+			print("%i ", mrm_lid_can_b2->reading(i));
+		#endif
 		print(", ref:");
 		for (uint8_t i = 0; i < 9; i++)
 			print("%i ", mrm_ref_can->reading(i));
@@ -153,10 +213,19 @@ void RobotMin::loop() {
 		}
 	}
 
-	// mrm-col-can, mrm-ir-finder3, mrm-lid-can-b2, mrm-ref-can, mrm-therm-b-can, mrm-barr2*, mrm-enc
+	//mrm-col-can, mrm-ir-finder3, mrm-lid-can-b2, mrm-ref-can, mrm-therm-b-can, mrm-barr2*, mrm-enc
 	// print("lid:%imm ir:%i refArr:%i th:%ideg barr:%i col:%i, enc:%i, col:%i\n\r", mrm_lid_can_b2->reading(0), mrm_ir_finder3->reading(0), mrm_ref_can->reading(0), mrm_therm_b_can->reading(0),
 	// 	analogRead(36), mrm_col_can->reading(0), digitalRead(26), mrm_col_can->reading(0));
 
-	//print("lid:%imm refArr:%i th:%ideg \n\r", mrm_lid_can_b2->reading(0), mrm_ref_can->reading(0), mrm_therm_b_can->reading(0));
-	//actionSet(_actionAny);
+	// print("lid4m:%imm refArr:%i th:%ideg \n\r", mrm_lid_can_b2->reading(0), mrm_ref_can->reading(0), mrm_therm_b_can->reading(0));
+	// actionSet(_actionLoop);
+	#endif
+
+	#define TEST3 1
+	#if TEST3
+	print("%i %i\n\r", mrm_therm_b_can->reading(0),  mrm_therm_b_can->reading(1));
+	if ( mrm_therm_b_can->reading(0) > 50 ||  mrm_therm_b_can->reading(1) > 50)
+		end();
+	delayMs(100);
+	#endif
 }

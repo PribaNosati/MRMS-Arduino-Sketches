@@ -28,12 +28,12 @@ public:
 	@param y - y coordinate.
 	@param breadcrumb - way back to the start tile.
 	*/
-	Tile(int8_t x, int8_t y, Direction breadcrumb); 
+	Tile(int8_t x, int8_t y, Direction breadcrumb);
 
 	/** Enables traversing the chain from outside of the class.
 	@return - link to the next tile in chain.
 	*/
-	Tile* next() { return _chain; } 
+	Tile* next() { return _chain; }
 
 	/** Existence of the wall, victims, etc.
 	@param direction - direction of the wall.
@@ -108,9 +108,8 @@ public:
 	*/
 	void decide();
 
-	/** Distance measuring function. Sensors must have deviceId addresses exactly like here: 0 FR, 1 FL, 2 LF, 3 LB, 4 BL, 5 BR, 6 RB, 7 RF. F is front, B is back, L is left, R is right. 
-	In 2-letter designations first letter is a major direction, second minor. For example FL means Front-Left and first we choose major side (robot's front), then minor (left sensor on that side). 
-	In other words, first sensor is front-right and all the others must have increasing	addresses counter-clockwise (CCW).
+	/** Distance measuring function. Sensors must have deviceId addresses exactly like here: 0 FR, 1 FL, 2 LF, 3 LB, 4 BL, 5 BR, 6 RB, 7 RF. F is front, B is back, L is left, R is right.
+	In 2-letter designations first letter is a major direction, second minor. For example FL means Front-Left and first we choose major side (robot's front), then minor (left sensor on that side). 	In other words, first sensor is front-right and all the others must have increasing	addresses counter-clockwise (CCW).
 	@direction - direction in maze's system. Therefore, LEFT is always left, as seen from outside of the maze, no matter what the robot's direction is. It is normally not robot's left side.
 	@firstCCW - first when counting ounter-clockwise (CCW) on that side, looking from inside of the robot. For example FL is first CCW and FR is not.
 	@return - distance in mm.

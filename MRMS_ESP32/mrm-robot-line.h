@@ -115,6 +115,12 @@ public:
 	*/
 	void bitmapsSet();
 
+	/** Color sensor's blue
+	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
+	@return - intensity of blue
+	 */
+	uint16_t blue(uint8_t deviceNumber = 0){return mrm_col_can->colorGreen(deviceNumber);}
+
 	/** Line sensor - brightness of the surface
 	@param transistorNumber - starts from 0 and end value depends on sensor. Usually 7 (for mrm-ref-can8) or 8 (for mrm-ref-can9).
 	@return - brightness as an analog value.
@@ -140,6 +146,11 @@ public:
 	@image - image's number
 	*/
 	void display(ledSign image);
+
+	/** Display 8x8 text
+	@image - image's number
+	*/
+	void display(char* text);
 
 	/** Enter evacuation-zone algorithm.
 	*/
@@ -216,6 +227,12 @@ public:
 	*/
 	void goAhead();
 
+	/** Color sensor's green
+	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
+	@return - intensity of green
+	 */
+	uint16_t green(uint8_t deviceNumber = 0){return mrm_col_can->colorGreen(deviceNumber);}
+
 	/**Compass
 	@return - North is 0�, clockwise are positive angles, values 0 - 360.
 	*/
@@ -231,7 +248,7 @@ public:
 	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0. 0xFF - all sensors.
 	@param current - 0 - 3
 	*/
-	void illumination(uint8_t current, uint8_t deviceNumber);
+	void illumination(uint8_t current, uint8_t deviceNumber = 0);
 
 	/** Follow a RCJ line.
 	*/
@@ -250,16 +267,18 @@ public:
 	*/
 	void obstacleAvoid();
 
-	/** Test for Mecanum wheels.
-	*/
-	void omniWheelsTest();
+	/** Color sensor's orange
+	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
+	@return - intensity of orange
+	 */
+	uint16_t orange(uint8_t deviceNumber = 0){return mrm_col_can->colorOrange(deviceNumber);}
 
 	/** Choose a pattern closest to the current 6 colors
 	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
 	@param includeValue - if true, HSV compared. If not, HS.
 	@raturn - patternNumber
 	*/
-	uint8_t patternColors(uint8_t deviceNumber);
+	uint8_t patternColors(uint8_t deviceNumber = 0);
 
 	/**Pitch
 	@return - Pitch in degrees. Inclination forwards or backwards. Leveled robot shows 0�.
@@ -269,6 +288,12 @@ public:
 	/** Starts the RCJ Line run after this action selected.
 	*/
 	void rcjLine();
+
+	/** Color sensor's red
+	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
+	@return - intensity of red
+	 */
+	uint16_t red(uint8_t deviceNumber = 0){return mrm_col_can->colorRed(deviceNumber);}
 
 	/** Right side - rear sensor distance.
 	@return - in mm
@@ -323,6 +348,12 @@ public:
 	*/
 	uint8_t value(uint8_t deviceNumber);
 
+	/** Color sensor's violet
+	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
+	@return - intensity of violet
+	 */
+	uint16_t violet(uint8_t deviceNumber = 0){return mrm_col_can->colorViolet(deviceNumber);}
+
 	/** Follows a wall.
 	*/
 	void wallFollow();
@@ -336,6 +367,12 @@ public:
 	@return - true if wall
 	*/
 	bool wallRight();
+
+	/** Color sensor's yellow
+	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
+	@return - intensity of yellow
+	 */
+	uint16_t yellow(uint8_t deviceNumber = 0){return mrm_col_can->colorYellow(deviceNumber);}
 };
 
 /** Actions serve a few purposes.
