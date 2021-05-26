@@ -22,7 +22,7 @@
 #define MAXIMUM_WALL_MM 300 // If distance bigger than this value, do not follow wall.
 
 // mrm-8x8a display bitmaps.
-enum ledSign {LED_EVACUATION_ZONE, LED_FULL_CROSSING_BOTH_MARKS, LED_FULL_CROSSING_MARK_LEFT, LED_FULL_CROSSING_MARK_RIGHT, LED_FULL_CROSSING_NO_MARK,
+enum ledSign {LED_CUSTOM, LED_EVACUATION_ZONE, LED_FULL_CROSSING_BOTH_MARKS, LED_FULL_CROSSING_MARK_LEFT, LED_FULL_CROSSING_MARK_RIGHT, LED_FULL_CROSSING_NO_MARK,
 	LED_HALF_CROSSING_MARK_LEFT, LED_HALF_CROSSING_MARK_RIGHT, LED_HALF_CROSSING_LEFT_NO_MARK, LED_HALF_CROSSING_RIGHT_NO_MARK,
 	LED_LINE_FULL, LED_LINE_FULL_BOTH_MARKS, LED_LINE_FULL_MARK_LEFT, LED_LINE_FULL_MARK_RIGHT, LED_LINE_INTERRUPTED, LED_CURVE_LEFT, 
 	LED_CURVE_RIGHT, LED_OBSTACLE, LED_OBSTACLE_AROUND_LEFT, LED_OBSTACLE_AROUND_RIGHT, LED_PAUSE, LED_PLAY, LED_T_CROSSING_BY_L, 
@@ -145,7 +145,7 @@ public:
 	/** Display 8x8 image
 	@image - image's number
 	*/
-	void display(ledSign image);
+	void display(uint8_t image);
 
 	/** Display 8x8 text
 	@image - image's number
@@ -317,7 +317,7 @@ public:
 	uint8_t saturation(uint8_t deviceNumber);
 
 	/** Move servo
-	@param degrees - Servo's target angle, 0 - 180�, or 0 - 360�, depending on model, counting clockwise
+	@param degrees - Servo's target angle, 0 - 180°, or 0 - 360°, depending on model, counting clockwise
 	@param servoNumber - Servo's ordinal number. Each call of function add() assigns a increasing number to the servo, starting with 0.
 	*/
 	void servo(uint16_t degrees = 90, uint8_t servoNumber = 0);
@@ -330,6 +330,13 @@ public:
 	/** Stop the robot
 	*/
 	void stop();
+
+	/** Store 8x8 image to 8x8 LED's internal memory
+	@red - red pixels
+	@green - green pixels
+	@image - image's number
+	*/
+	void store(uint8_t red[], uint8_t green[], uint8_t image);
 
 	/** Prints line and color sensors. Used for debugging.
 	@param newLine - new line
