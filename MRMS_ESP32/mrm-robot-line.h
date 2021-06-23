@@ -35,6 +35,7 @@ class ActionEvacuationZone;
 class ActionObstacleAvoid;
 class ActionLineFollow;
 class ActionRCJLine;
+class ActionMotorShortTest;
 
 class ActionLoop0;
 class ActionLoop1;
@@ -64,6 +65,7 @@ class RobotLine : public Robot {
 	ActionRCJLine* actionRCJLine;
 	ActionBase* actionWallFollow;
 	ActionStop* actionStop;
+	ActionMotorShortTest* actionMotorShortTest;
 
 	// Generic actions
 	ActionLoop0* actionLoop0;
@@ -262,6 +264,10 @@ public:
 	@return - true if marker found, false otherwise
 	*/
 	bool markers();
+
+	/** Test motors
+	*/
+	void motorShortTest();
 
 	/** Avoid an obstacle on line.
 	*/
@@ -516,4 +522,10 @@ class ActionLoopMenu : public ActionBase {
 	void perform() { ((RobotLine*)_robot)->loopMenu(); }
 public:
 	ActionLoopMenu(Robot* robot) : ActionBase(robot, "lme", "Loop (menu)", 1) {}
+};
+
+class ActionMotorShortTest : public ActionBase {
+	void perform() { ((RobotLine*)_robot)->motorShortTest(); }
+public:
+	ActionMotorShortTest(Robot* robot) : ActionBase(robot, "msh", "Motor short test") {}
 };

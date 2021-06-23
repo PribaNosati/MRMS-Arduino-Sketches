@@ -11,6 +11,7 @@
 #include <mrm-servo.h>
 #include <mrm-therm-b-can.h>
 
+class ActionMotorShortTest;
 
 /** Constructor
 @param name - it is also used for Bluetooth so a Bluetooth client (like a phone) will list the device using this name.
@@ -26,7 +27,7 @@ RobotMin::RobotMin(char name[]) : Robot(name) {
 	// but uncommenting the following line will change the direction of the motor 2.
 	//mrm_mot4x3_6can->directionChange(2);
 
-	// All the actions will be defined here; the objects will be created.
+	// All the actions will be defined here; the objects will be created. 
 
 
 	// The actions that should be displayed in menus must be added to menu-callable actions. You can use action-objects defined
@@ -70,7 +71,7 @@ void RobotMin::loop() {
 	print("Enc:%i\n\r", mrm_bldc4x2_5->reading(0));
 	#endif
 
-	#define TEST2 0
+	#define TEST2 1
 	#if TEST2
 	#define OUTPUT_MOTORS 0
 	#define TOP_SPEED_TEST 30
@@ -118,7 +119,7 @@ void RobotMin::loop() {
 	if (millis() - lastLidarMs > 150){
 		lastLidarMs = millis();
 		for (uint8_t i = 0; i < 3; i++){
-			if (mrm_lid_can_b->reading(i) == lidarLast[i] && mrm_lid_can_b->reading(i) != 2000){
+			if (mrm_lid_can_b->distance(i) == lidarLast[i] && mrm_lid_can_b->distance(i) != 2000){
 				lidarCount[i]++;
 				if (lidarCount[i] > 300){
 					print("Lidar stopped.");
@@ -128,12 +129,12 @@ void RobotMin::loop() {
 			}
 			else
 				lidarCount[i] = 0;
-			lidarLast[i] = mrm_lid_can_b->reading();
+			lidarLast[i] = mrm_lid_can_b->distance();
 		}
 	}
 	#endif
 
-	#define MRM_LID_CAN_B2 1
+	#define MRM_LID_CAN_B2 0
 	#if MRM_LID_CAN_B2
 	// mrm-lid-can-b2
 	static uint32_t lastLidar4Ms = 0;
@@ -185,12 +186,12 @@ void RobotMin::loop() {
 		#if MRM_LID_CAN_B
 		print("Lid:");
 		for (uint8_t i = 0; i < 3; i++)
-			print("%i ", mrm_lid_can_b->reading(i));
+			print("%i ", mrm_lid_can_b->distance(i));
 		#endif
 		#if MRM_LID_CAN_B2
 		print("Lid:");
 		for (uint8_t i = 0; i < 3; i++)
-			print("%i ", mrm_lid_can_b2->reading(i));
+			print("%i ", mrm_lid_can_b2->distance(i));
 		#endif
 		print(", ref:");
 		for (uint8_t i = 0; i < 9; i++)
@@ -221,7 +222,7 @@ void RobotMin::loop() {
 	// actionSet(_actionLoop);
 	#endif
 
-	#define TEST3 1
+	#define TEST3 0
 	#if TEST3
 	print("%i %i\n\r", mrm_therm_b_can->reading(0),  mrm_therm_b_can->reading(1));
 	if ( mrm_therm_b_can->reading(0) > 50 ||  mrm_therm_b_can->reading(1) > 50)

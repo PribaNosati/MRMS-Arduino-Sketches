@@ -27,6 +27,7 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 	actionRCJLine = new ActionRCJLine(this);
 	actionWallFollow = new ActionWallFollow(this);
 	actionStop = new ActionStop(this);
+	actionMotorShortTest = new ActionMotorShortTest(this);
 
 	// Generic actions
 	actionLoopMenu = new ActionLoopMenu(this);
@@ -49,6 +50,7 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 	actionAdd(actionObstacleAvoid);
 	actionAdd(actionRCJLine);
 	actionAdd(actionWallFollow);
+	actionAdd(actionMotorShortTest);
 
 	// Generic actions
 	actionAdd(actionLoopMenu);
@@ -674,21 +676,21 @@ void RobotLine::evacuationZone() {
 @return - in mm
 */
 uint16_t RobotLine::front() {
-	return mrm_lid_can_b->reading(1); // Correct all sensors so that they return the same value for the same physical distance.
+	return mrm_lid_can_b->distance(1); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Front side - left sensor distance.
 @return - in mm
 */
 uint16_t RobotLine::frontLeft() {
-	return mrm_lid_can_b->reading(0); // Correct all sensors so that they return the same value for the same physical distance.
+	return mrm_lid_can_b->distance(0); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Front side - right sensor distance.
 @return - in mm
 */
 uint16_t RobotLine::frontRight() {
-	return mrm_lid_can_b->reading(2); // Correct all sensors so that they return the same value for the same physical distance.
+	return mrm_lid_can_b->distance(2); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Start motors
@@ -735,14 +737,14 @@ void RobotLine::illumination(uint8_t current, uint8_t deviceNumber) {
 @return - in mm
 */
 uint16_t RobotLine::leftBack() {
-	return mrm_lid_can_b->reading(4); // Correct all sensors so that they return the same value for the same physical distance.
+	return mrm_lid_can_b->distance(4); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Left side - front sensor distance.
 @return - in mm
 */
 uint16_t RobotLine::leftFront() {
-	return mrm_lid_can_b->reading(0) + -30; // Correct all sensors so that they return the same value for the same physical distance.
+	return mrm_lid_can_b->distance(0) + -30; // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Line found?
@@ -840,24 +842,21 @@ void RobotLine::lineFollow() {
 /** Custom test. The function will be called many times during the test, till You issue "x" menu command.
 */
 void RobotLine::loop() {
-	uint8_t red[8];
-	uint8_t green[8];
-	
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	
-	green[0] = 0b11111111;
-	green[1] = 0b10000001;
-	green[2] = 0b10000001;
-	green[3] = 0b10000001;
-	green[4] = 0b10000001;
-	green[5] = 0b10000001;
-	green[6] = 0b10000001;
-	green[7] = 0b11111111;
-
-	store(red, green, 1);
-	display(1);
-
+	uint8_t cnt = 0;
+	uint8_t i = 0;
+	do{
+		deviceInfo(i, boardInfo, SENSOR_BOARD);
+		if (strcmp(boardInfo->name, "") != 0){
+			print("Sensor: %s, device nr: %i readings: %i \n\r", boardInfo->name, boardInfo->deviceNumber, boardInfo->readingsCount);
+			cnt = boardInfo->readingsCount;
+			for (uint8_t j = 0; j < cnt; j++)
+				print("%i ", (((SensorBoard *)boardInfo->board)->reading(j, boardInfo->deviceNumber)));
+			print("\n\r");
+		}
+		else
+			cnt = 0;
+		i++;
+	}while(cnt != 0);
 	end();
 }
 
@@ -948,6 +947,16 @@ bool RobotLine::markers() {
 		surfacePrint(true, 3000);
 	}
 	return found;
+}
+
+
+/** Test motors
+ */
+void RobotLine::motorShortTest(){
+	go(60, 60);
+	delayMs(2000);
+	go(-60, -60);
+	delayMs(2000);
 }
 
 /** Avoid an obstacle on line.
@@ -1059,14 +1068,14 @@ void RobotLine::rcjLine() {
 @return - in mm
 */
 uint16_t RobotLine::rightBack() {
-	return mrm_lid_can_b->reading(3); // Correct all sensors so that they return the same value for the same physical distance.
+	return mrm_lid_can_b->distance(3); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Right side - front sensor distance.
 @return - in mm
 */
 uint16_t RobotLine::rightFront() {
-	return mrm_lid_can_b->reading(2) + 10; // Correct all sensors so that they return the same value for the same physical distance.
+	return mrm_lid_can_b->distance(2) + 10; // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Roll

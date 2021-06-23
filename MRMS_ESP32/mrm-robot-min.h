@@ -15,7 +15,6 @@ class RobotMin : public Robot {
 
 	// Actions' declarations
 
-
 public:
 	/** Constructor
 	@param name - it is also used for Bluetooth so a Bluetooth client (like a phone) will list the device using this name.
@@ -58,3 +57,5 @@ for no-menu actions.
 The fourth pareameter is menu level. When omitted, the action will not be a part of the menu. Use 1 otherwise. Higher level numbers will display the action in submenues, not used here.
 */
 
+/** Menu for generic actions
+*/
