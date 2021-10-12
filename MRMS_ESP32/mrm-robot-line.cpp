@@ -71,9 +71,9 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 	mrm_servo->add(17, (char*)"ServoL", 0, 180, 0.5, 2.5); 
 
 	// Set buttons' actions.
-	mrm_8x8a->actionSet(actionRCJLine, 0); // Button 0 starts RCJ Line.
-	mrm_8x8a->actionSet(_actionLoop, 1); // Button 1 starts user defined loop() function
-	//mrm_8x8a->actionSet(actionEvacuationZone, 2); // Button 2 starts robot in evacution zone.
+	// mrm_8x8a->actionSet(actionRCJLine, 0); // Button 1 starts RCJ Line.
+	// mrm_8x8a->actionSet(actionEvacuationZone, 1); // Button 2 starts robot in evacution zone.
+	mrm_8x8a->actionSet(_actionLoop, 2); // Button 3 starts user defined loop() function
 	mrm_8x8a->actionSet(actionStop, 3); // Stop the robot
 
 	// Put Your buttons' actions here.
@@ -87,12 +87,14 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 	// Digital switches connected to ESP32 pins
 	// pinMode(25, INPUT_PULLDOWN);
 	// pinMode(26, INPUT_PULLDOWN);
-	pinMode(27, INPUT_PULLDOWN);
+	pinMode(GRIPPER_SWITCH, INPUT_PULLDOWN); // Gripper's switch (27)
 	// pinMode(32, INPUT_PULLDOWN);
 	// pinMode(33, INPUT_PULLDOWN);
 
 	// If uncommented, robot will immediately after power-on start executing loop()
 	//actionSet(_actionLoop);
+
+	armClose();
 }
 
 /** Arm will go to ball-catch position.
@@ -114,7 +116,7 @@ void RobotLine::armCatchReady() {
 /** 
 */
 void RobotLine::armClose() {
-	mrm_servo->write(LIFT_SERVO_DOWN, 0); // Lift the arm.
+	mrm_servo->write(LIFT_SERVO_DOWN, 0); // Lower the arm.
 	mrm_servo->write(CATCH_SERVO_L_CLOSE, 1); // 
 	mrm_servo->write(CATCH_SERVO_R_CLOSE, 2); // 
 }
@@ -131,9 +133,9 @@ void RobotLine::armDrop() {
 /** 
 */
 void RobotLine::armUp() {
+	mrm_servo->write(CATCH_SERVO_L_CLOSE, 1); // 
+	mrm_servo->write(CATCH_SERVO_R_CLOSE, 2); // 
 	mrm_servo->write(LIFT_SERVO_UP, 0); // Lift the arm.
-	mrm_servo->write(CATCH_SERVO_L_CATCH, 1); // 
-	mrm_servo->write(CATCH_SERVO_R_CATCH, 2); // 
 }
 
 /** Barrier interrupted?
@@ -774,16 +776,38 @@ float RobotLine::lineCenter() {
 /** Follow a RCJ line.
 */
 void RobotLine::lineFollow() {
+	static uint32_t ms = 0;
+	if (setup()){
+		ms = millis();
+		armUp();
+	}
+
+	if (lineAny())
+		ms = millis();
+
 	if (line(8))
 		go(-90, 90);
 	else if (line(0))
 		go(90, -90);
+	else if (line(7))
+		go(0, 100);
+	else if (line(1))
+		go(100, 0);
+	else if (line(6))
+		go(30, 80);
+	else if (line(2))
+		go(80, 30);
 	else if (line(5))
-		go(10, 90);
+		go(40, 70);
 	else if (line(3))
-		go(90, 10);
+		go(70, 40);
+	else if (line(4))
+		go(70, 70);
 	else
-		go(60, 60);
+		if (millis() - ms > 100)
+			stop();
+		else
+			go(70, 70);
 	// static uint32_t lastLineFoundMs = millis(); // Used to measure gap in line.
 
 	// // Obstacle?
@@ -842,46 +866,20 @@ void RobotLine::lineFollow() {
 /** Custom test. The function will be called many times during the test, till You issue "x" menu command.
 */
 void RobotLine::loop() {
-	uint8_t cnt = 0;
-	uint8_t i = 0;
-	do{
-		deviceInfo(i, boardInfo, SENSOR_BOARD);
-		if (strcmp(boardInfo->name, "") != 0){
-			print("Sensor: %s, device nr: %i readings: %i \n\r", boardInfo->name, boardInfo->deviceNumber, boardInfo->readingsCount);
-			cnt = boardInfo->readingsCount;
-			for (uint8_t j = 0; j < cnt; j++)
-				print("%i ", (((SensorBoard *)boardInfo->board)->reading(j, boardInfo->deviceNumber)));
-			print("\n\r");
-		}
-		else
-			cnt = 0;
-		i++;
-	}while(cnt != 0);
-	end();
+print("%i\n\r", digitalRead(GRIPPER_SWITCH));
 }
 
 /** Generic actions, use them as templates
 */
-void RobotLine::loop0() { print("%i\n\r", analogRead(35)); }
+void RobotLine::loop0() { armClose(); end();}
 void RobotLine::loop1() { armCatchReady(); end(); }
-void RobotLine::loop2() { armUp(); end(); }
-void RobotLine::loop3() { actionSet(actionEvacuationZone); }
-void RobotLine::loop4() { armCatch(); end(); }
-void RobotLine::loop5() { mrm_fet_can->test(); }
-void RobotLine::loop6() {armDrop(); end(); }
-void RobotLine::loop7() {armClose();}
-void RobotLine::loop8() {
-	static int speed = 0;
-	static int step = 1;
-	go(speed , speed );
-	speed += step;
-	if (speed == -127)
-		step = 1;
-	else if (speed == 127)
-		step = -1;
-	print("%i\n\r", speed);
-	delayMs(3);
-}
+void RobotLine::loop2() { armCatch(); end(); }
+void RobotLine::loop3() { armUp(); end(); }
+void RobotLine::loop4() { armDrop(); end(); }
+void RobotLine::loop5() { }
+void RobotLine::loop6() { }
+void RobotLine::loop7() {}
+void RobotLine::loop8() {}
 void RobotLine::loop9() {
 	armCatchReady();
 	delayMs(2000);
@@ -963,12 +961,17 @@ void RobotLine::motorShortTest(){
 */
 void RobotLine::obstacleAvoid() {
 	stop();
-	delayMs(1000);
-	print("Prije");
+	delayMs(2000);
+	print("Prepreka");
 	go(50, -50);
-	while (front() < 200 || frontLeft() < 200 || lineAny())
+	uint32_t lastLineMs = millis();
+	while (front() < 200 || frontLeft() < 200 || millis() - lastLineMs < 200){
 		noLoopWithoutThis();
+		if (lineAny())
+			lastLineMs = millis();
+	}
 	stop();
+	print("Okrenut");
 	delayMs(2000);
 	while(!lineAny()){
 		if (front() < 200 || frontLeft() < 200)
@@ -978,7 +981,10 @@ void RobotLine::obstacleAvoid() {
 		noLoopWithoutThis();
 	}
 	stop();
-	delayMs(1000);
+	print("Naišao");
+	delayMs(2000);
+	go(70, 10);
+	delayMs(500);
 	print("Linija");
 	// // Static variables - their value will be retained between this function's calls, just like with global variables, but they have local scope.
 	// static uint8_t part = 0;
@@ -1054,8 +1060,9 @@ float RobotLine::pitch() {
 */
 void RobotLine::rcjLine() {
 	lineFollow();
-	if (front() < 100)
-		obstacleAvoid();
+	if (false)
+		if (front() < 100)
+			obstacleAvoid();
 	// mrm_8x8a->rotationSet(LED_8X8_BY_90_DEGREES); // Rotate the mrm-8x8a by 90� so that it can be read properly when standing behind the robot.
 	// bitmapsSet(); // Upload all the predefined bitmaps into the mrm-8x8a.
 	// display(LED_PLAY); // Show "play" sign.

@@ -21,7 +21,8 @@ RobotMin::RobotMin(char name[]) : Robot(name) {
 	// 2nd, 4th, 6th, and 8th parameters are output connectors of the controller (0 - 3, meaning 1 - 4. connector). 2nd one must be connected to LB (Left-Back) motor,
 	// 4th to LF (Left-Front), 6th to RF (Right-Front), and 8th to RB (Right-Back). Therefore, You can connect motors freely, but have to
 	// adjust the parameters here. In this example output (connector) 3 is LB, etc.
-	motorGroup = new MotorGroupDifferential(this, mrm_mot4x3_6can, 3, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 0);
+	//motorGroup = new MotorGroupDifferential(this, mrm_mot4x3_6can, 3, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 0);
+	motorGroup = new MotorGroupDifferential(this, mrm_bldc4x2_5, 3, mrm_bldc4x2_5, 1, mrm_bldc4x2_5, 2, mrm_bldc4x2_5, 0);
 
 	// Depending on your wiring, it may be necessary to spin some motors in the other direction. In this example, no change needed,
 	// but uncommenting the following line will change the direction of the motor 2.
@@ -49,6 +50,25 @@ RobotMin::RobotMin(char name[]) : Robot(name) {
 /** Custom test. The function will be called many times during the test, till You issue "x" menu-command.
 */
 void RobotMin::loop() {
+	#define LIST_ALL 0
+	#if LIST_ALL
+	uint8_t cnt = 0;
+    uint8_t i = 0;
+    do{
+        deviceInfo(i, boardInfo, SENSOR_BOARD);
+        if (strcmp(boardInfo->name, "") != 0){
+            print("Sensor: %s, device nr: %i readings: %i \n\r", boardInfo->name, boardInfo->deviceNumber, boardInfo->readingsCount);
+            cnt = boardInfo->readingsCount;
+            for (uint8_t j = 0; j < cnt; j++)
+                print("%i ", (((SensorBoard *)boardInfo->board)->reading(j, boardInfo->deviceNumber)));
+            print("\n\r");
+        }
+        else
+            cnt = 0;
+        i++;
+    }while(cnt != 0);
+    end();
+	#endif
 	#define TEST1 0
 	#if TEST1
 	// if (setup()){
@@ -64,17 +84,18 @@ void RobotMin::loop() {
 
 	// 	delayMs(2000);
 	// speed = -speed;
-	if (setup()){
-		// // mrm_bldc4x2_5->start();
-		mrm_bldc4x2_5->speedSet(0, 20);
-	}
-	print("Enc:%i\n\r", mrm_bldc4x2_5->reading(0));
+
+	// if (setup()){
+	// 	// // mrm_bldc4x2_5->start();
+	// 	mrm_bldc4x2_5->speedSet(0, 20);
+	// }
+	// print("Enc:%i\n\r", mrm_bldc4x2_5->reading(0));
 	#endif
 
 	#define TEST2 1
 	#if TEST2
-	#define OUTPUT_MOTORS 0
-	#define TOP_SPEED_TEST 30
+	#define OUTPUT_MOTORS 1
+	#define TOP_SPEED_TEST 100 //30
 	// if (setup()) { // This part will execute only in the first run.
 	// 	pinMode(27, OUTPUT);
 	// 	pinMode(26, INPUT);
@@ -85,7 +106,7 @@ void RobotMin::loop() {
 		ok = true;
 
 	// mrm-mot4x3.6_can
-	static int16_t speed = 0;
+	static int16_t speed = 10;
 	static bool up = true;
 	#if OUTPUT_MOTORS
 	motorGroup->go(speed, speed);
@@ -110,7 +131,8 @@ void RobotMin::loop() {
 	// }
 
 	
-	#define MRM_LID_CAN_B 1
+	#define MRM_LID_CAN_B 0
+	#define MRM_LID_COUNT 14
 	#if MRM_LID_CAN_B
 	// mrm-lid-can-b
 	static uint32_t lastLidarMs = 0;
@@ -118,23 +140,26 @@ void RobotMin::loop() {
 	static uint16_t lidarCount[3];
 	if (millis() - lastLidarMs > 150){
 		lastLidarMs = millis();
-		for (uint8_t i = 0; i < 3; i++){
-			if (mrm_lid_can_b->distance(i) == lidarLast[i] && mrm_lid_can_b->distance(i) != 2000){
-				lidarCount[i]++;
-				if (lidarCount[i] > 300){
-					print("Lidar stopped.");
-					mrm_8x8a->bitmapDisplay('L');
-					ok = false;
+		for (uint8_t i = 0; i < MRM_LID_COUNT; i++){
+			if (mrm_lid_can_b->alive(i)){
+				if (mrm_lid_can_b->distance(i) == lidarLast[i] && mrm_lid_can_b->distance(i) != 2000){
+					lidarCount[i]++;
+					if (lidarCount[i] > 3000){
+						print("Lidar stopped.");
+						mrm_8x8a->bitmapDisplay('L');
+						ok = false;
+					}
 				}
+				else
+					lidarCount[i] = 0;
+				lidarLast[i] = mrm_lid_can_b->distance();
 			}
-			else
-				lidarCount[i] = 0;
-			lidarLast[i] = mrm_lid_can_b->distance();
 		}
 	}
 	#endif
 
-	#define MRM_LID_CAN_B2 0
+
+	#define MRM_LID_CAN_B2 1
 	#if MRM_LID_CAN_B2
 	// mrm-lid-can-b2
 	static uint32_t lastLidar4Ms = 0;
@@ -153,12 +178,14 @@ void RobotMin::loop() {
 			}
 			else
 				lidar4Count[i] = 0;
-			lidar4Last[i] = mrm_lid_can_b2->reading();
+			lidar4Last[i] = mrm_lid_can_b2->reading(i);
 		}
 	}
 	#endif
 
 	// mrm-ref-can
+	#define MRM_REF_TEST 1
+	#if MRM_REF_TEST
 	static uint32_t lastRefMs = 0;
 	static uint16_t refLast[9];
 	static uint16_t refCount[9];
@@ -178,6 +205,7 @@ void RobotMin::loop() {
 			refLast[i] = mrm_ref_can->reading(i);
 		}
 	}
+	#endif
 
 	// Display
 	static uint8_t timeCnt = 0;
@@ -185,17 +213,35 @@ void RobotMin::loop() {
 	if (millis() - lastDisplayMs > 500){
 		#if MRM_LID_CAN_B
 		print("Lid:");
-		for (uint8_t i = 0; i < 3; i++)
-			print("%i ", mrm_lid_can_b->distance(i));
+		for (uint8_t i = 0; i < MRM_LID_COUNT; i++)
+			if (mrm_lid_can_b->alive(i))
+				print("%i ", mrm_lid_can_b->distance(i));
 		#endif
 		#if MRM_LID_CAN_B2
 		print("Lid:");
 		for (uint8_t i = 0; i < 3; i++)
 			print("%i ", mrm_lid_can_b2->distance(i));
 		#endif
+		#if MRM_REF_TEST
 		print(", ref:");
 		for (uint8_t i = 0; i < 9; i++)
 			print("%i ", mrm_ref_can->reading(i));
+		#endif
+		#define MRM_THERM_TEST 0
+		#if MRM_THERM_TEST
+		print(", therm:");
+		for (uint8_t i = 0; i < 2; i++)
+			print("%i ", mrm_therm_b_can->reading(i));
+		#endif
+		#define MRM_ENCODERS_TEST 0
+		#if MRM_ENCODERS_TEST
+		print(", enc:");
+		for (uint8_t i = 0; i < 4; i++)
+			print("%i ", mrm_bldc4x2_5->reading(i));
+		#endif
+		#if OUTPUT_MOTORS
+		print(", mot:%i", speed);
+		#endif
 		print("\n\r");
 
 		// mrm-led8x8

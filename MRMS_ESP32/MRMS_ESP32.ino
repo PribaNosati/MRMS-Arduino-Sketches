@@ -1,4 +1,3 @@
-#define RADIO 1 // 0 - no radio, 1 Bluetooth, 2 WiFi
 #include <Arduino.h>
 #include <mrm-8x8a.h>
 #include <mrm-board.h>
@@ -36,9 +35,10 @@
 Robot *robot;
 
 void setup() {
-	robot = new RobotLine((char*)"Pero"); // RobotLine, RobotMaze, RobotMin, RobotSoccer, or Your custom robot. "Pero" is Bluetooth name.
+  robot = new RobotLine((char*)"Donald"); // RobotLine, RobotMaze, RobotMin, RobotSoccer, or Your custom robot. "My robot" is Bluetooth name.
+  robot->print("Start.");
 }
 
 void loop() {
-	robot->refresh();
+  robot->refresh();
 }

@@ -4,17 +4,19 @@
 
 // Change these values to get optimal robot's behaviour.
 
-// CATCH_SERVO drives jaws that catch ball.
-#define CATCH_SERVO_L_CATCH 30
-#define CATCH_SERVO_L_CLOSE 0 // Closed position, ball caught.
-#define CATCH_SERVO_L_OPEN 90 // Open position, ready to catch a ball.
-#define CATCH_SERVO_R_CATCH 60
-#define CATCH_SERVO_R_CLOSE 90 // Closed position, ball caught.
-#define CATCH_SERVO_R_OPEN 0 // Open position, ready to catch a ball.
+// CATCH_SERVO L and R drive jaws that catch ball.
+#define CATCH_SERVO_L_CATCH 30 // Ball caught, left servo. Smaller number - more tightly closed.
+#define CATCH_SERVO_L_CLOSE 0 // Closed (idle) position, no ball, left servo. Smaller number - more tightly closed.
+#define CATCH_SERVO_L_OPEN 90 // Open position, ready to catch a ball, left servo.
+#define CATCH_SERVO_R_CATCH 70 // Ball caught, right servo. Bigger number - more tightly closed.
+#define CATCH_SERVO_R_CLOSE 90 // Closed (idle) position, no ball, right servo. Bigger number - more tightly closed.
+#define CATCH_SERVO_R_OPEN 0 // Open position, ready to catch a ball, right servo. Bigger number - more tightly closed.
 
 // LIFT_SERVO lifts catch the mechanism.
-#define LIFT_SERVO_DOWN 80 // Lowest position, catching a ball.
-#define LIFT_SERVO_UP 120 // Top (idle) position.
+#define LIFT_SERVO_DOWN 130 // Lowest position, catching a ball. Increase number to lift higher.
+#define LIFT_SERVO_UP 230 // Top (idle) position. Increase number to lift higher.
+
+#define GRIPPER_SWITCH 27 // Gripper's switch for ball detection
 
 #define LIDAR_COUNT 6 // 3 or 6, depending on model. If only 3 lidars built in, 6-mode cannot be used.
 
