@@ -160,20 +160,35 @@ public:
 	*/
 	void evacuationZone();
 
-	/** Front sensor distance.
-	@return - in mm
+	/** Front distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
+	@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+					rest will be averaged. Keeps returning 0 till all the sample is read.
+					If sampleCount is 0, it will not wait but will just return the last value.
+	@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+					Therefore, lower sigma number will remove more errornous readings.
+	@return - distance in mm
 	*/
-	uint16_t front();
+	uint16_t front(uint8_t sampleCount = 0, uint8_t sigmaCount = 1);
 
-	/** Front side - left sensor distance.
-	@return - in mm
+	/** Front side - left distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
+	@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+					rest will be averaged. Keeps returning 0 till all the sample is read.
+					If sampleCount is 0, it will not wait but will just return the last value.
+	@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+					Therefore, lower sigma number will remove more errornous readings.
+	@return - distance in mm
 	*/
-	uint16_t frontLeft();
+	uint16_t frontLeft(uint8_t sampleCount = 0, uint8_t sigmaCount = 1);
 
-	/** Front side - right sensor distance.
-	@return - in mm
+	/** Front side - right distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
+	@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+					rest will be averaged. Keeps returning 0 till all the sample is read.
+					If sampleCount is 0, it will not wait but will just return the last value.
+	@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+					Therefore, lower sigma number will remove more errornous readings.
+	@return - distance in mm
 	*/
-	uint16_t frontRight();
+	uint16_t frontRight(uint8_t sampleCount = 0, uint8_t sigmaCount = 1);
 
 	/** Start motors
 	@param leftSpeed, in range -127 to 127
@@ -183,14 +198,24 @@ public:
 	void go(int16_t leftSpeed, int16_t rightSpeed);
 
 	/** Left side - rear sensor distance.
+	@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+					rest will be averaged. Keeps returning 0 till all the sample is read.
+					If sampleCount is 0, it will not wait but will just return the last value.
+	@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+					Therefore, lower sigma number will remove more errornous readings.
 	@return - in mm
 	*/
-	uint16_t leftBack();
+	uint16_t leftBack(uint8_t sampleCount = 0, uint8_t sigmaCount = 1);
 
 	/** Left side - front sensor distance.
+	 @param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+					rest will be averaged. Keeps returning 0 till all the sample is read.
+					If sampleCount is 0, it will not wait but will just return the last value.
+	@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+					Therefore, lower sigma number will remove more errornous readings.
 	@return - in mm
 	*/
-	uint16_t leftFront();
+	uint16_t leftFront(uint8_t sampleCount = 0, uint8_t sigmaCount = 1);
 
 	/** Line found?
 	@return - true if any sensor detects black.
@@ -303,15 +328,25 @@ public:
 	 */
 	uint16_t red(uint8_t deviceNumber = 0){return mrm_col_can->colorRed(deviceNumber);}
 
-	/** Right side - rear sensor distance.
-	@return - in mm
+	/** Front side - right distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
+	@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+					rest will be averaged. Keeps returning 0 till all the sample is read.
+					If sampleCount is 0, it will not wait but will just return the last value.
+	@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+					Therefore, lower sigma number will remove more errornous readings.
+	@return - distance in mm
 	*/
-	uint16_t rightBack();
+	uint16_t rightBack(uint8_t sampleCount = 0, uint8_t sigmaCount = 1);
 
-	/** Right side - front sensor distance.
-	@return - in mm
+	/** Front side - right distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
+	@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+					rest will be averaged. Keeps returning 0 till all the sample is read.
+					If sampleCount is 0, it will not wait but will just return the last value.
+	@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+					Therefore, lower sigma number will remove more errornous readings.
+	@return - distance in mm
 	*/
-	uint16_t rightFront();
+	uint16_t rightFront(uint8_t sampleCount = 0, uint8_t sigmaCount = 1);
 
 	/** Roll
 	@return - Roll in degrees. Inclination to the left or right. Values -90 - 90. Leveled robot shows 0�.

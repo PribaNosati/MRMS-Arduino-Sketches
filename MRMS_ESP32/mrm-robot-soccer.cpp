@@ -110,10 +110,15 @@ RobotSoccer::RobotSoccer(char name[]) : Robot(name) {
 }
 
 /** Rear distance to wall
+@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+				rest will be averaged. Keeps returning 0 till all the sample is read.
+				If sampleCount is 0, it will not wait but will just return the last value.
+@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+				Therefore, lower sigma number will remove more errornous readings.
 @return - in mm
 */
-uint16_t RobotSoccer::back() {
-	return mrm_lid_can_b2->reading(0, 2); // Correct all sensors so that they return the same value for the same physical distance.
+uint16_t RobotSoccer::back(uint8_t sampleCount, uint8_t sigmaCount) {
+	return mrm_lid_can_b2->distance(2, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Ball's direction
@@ -249,10 +254,15 @@ void RobotSoccer::catchBall() {
 }
 
 /** Front distance to wall
+@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+				rest will be averaged. Keeps returning 0 till all the sample is read.
+				If sampleCount is 0, it will not wait but will just return the last value.
+@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+				Therefore, lower sigma number will remove more errornous readings.
 @return - in mm
 */
-uint16_t RobotSoccer::front() {
-	return mrm_lid_can_b2->reading(0); // Correct all sensors so that they return the same value for the same physical distance.
+uint16_t RobotSoccer::front(uint8_t sampleCount, uint8_t sigmaCount) {
+	return mrm_lid_can_b2->distance(0, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Control of a robot with axles connected in a star formation, like in a RCJ soccer robot with omni wheels. Motor 0 is at 45 degrees, 1 at 135, 2 at -135, 3 at -45.
@@ -337,10 +347,15 @@ void RobotSoccer::idle() {
 }
 
 /** Left distance to wall
+@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+				rest will be averaged. Keeps returning 0 till all the sample is read.
+				If sampleCount is 0, it will not wait but will just return the last value.
+@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+				Therefore, lower sigma number will remove more errornous readings.
 @return - in mm
 */
-uint16_t RobotSoccer::left() {
-	return mrm_lid_can_b2->reading(0, 3); // Correct all sensors so that they return the same value for the same physical distance.
+uint16_t RobotSoccer::left(uint8_t sampleCount, uint8_t sigmaCount) {
+	return mrm_lid_can_b2->distance(3, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Line sensor
@@ -419,7 +434,10 @@ void RobotSoccer::lineAvoid(){
 /** Custom test.
 */
 void RobotSoccer::loop() {
-	static int direction;
+	print("%i %i %i %i\n\r", front(10), right(10), back(10), left(10));
+
+//print("%i\n\r", front());	
+	/*static int direction;
 	static uint32_t lastChangeMs;
 	if (setup()){
 		print("Setup!");
@@ -433,7 +451,7 @@ void RobotSoccer::loop() {
 		if (++direction > 180)
 			direction = -180;
 		lastChangeMs = millis();
-	}
+	}*/
 }
 
 /** Starts robot
@@ -457,10 +475,15 @@ float RobotSoccer::pitch() {
 }
 
 /** Right distance to wall
+@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+				rest will be averaged. Keeps returning 0 till all the sample is read.
+				If sampleCount is 0, it will not wait but will just return the last value.
+@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+				Therefore, lower sigma number will remove more errornous readings.
 @return - in mm
 */
-uint16_t RobotSoccer::right() {
-	return mrm_lid_can_b2->reading(0, 1); // Correct all sensors so that they return the same value for the same physical distance.
+uint16_t RobotSoccer::right(uint8_t sampleCount, uint8_t sigmaCount) {
+	return mrm_lid_can_b2->distance(1, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Roll

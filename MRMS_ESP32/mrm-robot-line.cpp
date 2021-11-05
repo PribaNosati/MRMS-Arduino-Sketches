@@ -67,8 +67,8 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 
 	// Servo motors. Note that some pins are not appropriate for PWM (servo)
 	mrm_servo->add(18, (char*)"ServoUp", 0, 300, 0.5, 2.5); // Data for mrm-rds5060-300
-	mrm_servo->add(19, (char*)"ServoR", 0, 180, 0.5, 2.5);
-	mrm_servo->add(17, (char*)"ServoL", 0, 180, 0.5, 2.5); 
+	mrm_servo->add(19, (char*)"ServoR", 0, 180, 0.5, 2.5); // Data for mrm-ps-1109hb
+	mrm_servo->add(17, (char*)"ServoL", 0, 180, 0.5, 2.5); // Data for mrm-ps-1109hb
 
 	// Set buttons' actions.
 	// mrm_8x8a->actionSet(actionRCJLine, 0); // Button 1 starts RCJ Line.
@@ -674,25 +674,40 @@ void RobotLine::evacuationZone() {
 	// }
 }
 
-/** Front sensor distance.
-@return - in mm
+/** Front distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
+@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+				rest will be averaged. Keeps returning 0 till all the sample is read.
+				If sampleCount is 0, it will not wait but will just return the last value.
+@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+				Therefore, lower sigma number will remove more errornous readings.
+@return - distance in mm
 */
-uint16_t RobotLine::front() {
-	return mrm_lid_can_b->distance(1); // Correct all sensors so that they return the same value for the same physical distance.
+uint16_t RobotLine::front(uint8_t sampleCount, uint8_t sigmaCount) {
+	return mrm_lid_can_b->distance(1, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
-/** Front side - left sensor distance.
-@return - in mm
+/** Front side - left distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
+@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+				rest will be averaged. Keeps returning 0 till all the sample is read.
+				If sampleCount is 0, it will not wait but will just return the last value.
+@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+				Therefore, lower sigma number will remove more errornous readings.
+@return - distance in mm
 */
-uint16_t RobotLine::frontLeft() {
-	return mrm_lid_can_b->distance(0); // Correct all sensors so that they return the same value for the same physical distance.
+uint16_t RobotLine::frontLeft(uint8_t sampleCount, uint8_t sigmaCount) {
+	return mrm_lid_can_b->distance(0, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
-/** Front side - right sensor distance.
-@return - in mm
+/** Front side - right distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
+@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+				rest will be averaged. Keeps returning 0 till all the sample is read.
+				If sampleCount is 0, it will not wait but will just return the last value.
+@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+				Therefore, lower sigma number will remove more errornous readings.
+@return - distance in mm
 */
-uint16_t RobotLine::frontRight() {
-	return mrm_lid_can_b->distance(2); // Correct all sensors so that they return the same value for the same physical distance.
+uint16_t RobotLine::frontRight(uint8_t sampleCount, uint8_t sigmaCount) {
+	return mrm_lid_can_b->distance(2, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Start motors
@@ -736,17 +751,27 @@ void RobotLine::illumination(uint8_t current, uint8_t deviceNumber) {
 }
 
 /** Left side - rear sensor distance.
+@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+				rest will be averaged. Keeps returning 0 till all the sample is read.
+				If sampleCount is 0, it will not wait but will just return the last value.
+@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+				Therefore, lower sigma number will remove more errornous readings.
 @return - in mm
 */
-uint16_t RobotLine::leftBack() {
-	return mrm_lid_can_b->distance(4); // Correct all sensors so that they return the same value for the same physical distance.
+uint16_t RobotLine::leftBack(uint8_t sampleCount, uint8_t sigmaCount) {
+	return mrm_lid_can_b->distance(4, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Left side - front sensor distance.
+@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+				rest will be averaged. Keeps returning 0 till all the sample is read.
+				If sampleCount is 0, it will not wait but will just return the last value.
+@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+				Therefore, lower sigma number will remove more errornous readings.
 @return - in mm
 */
-uint16_t RobotLine::leftFront() {
-	return mrm_lid_can_b->distance(0) + -30; // Correct all sensors so that they return the same value for the same physical distance.
+uint16_t RobotLine::leftFront(uint8_t sampleCount, uint8_t sigmaCount) {
+	return mrm_lid_can_b->distance(0, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Line found?
@@ -866,7 +891,28 @@ void RobotLine::lineFollow() {
 /** Custom test. The function will be called many times during the test, till You issue "x" menu command.
 */
 void RobotLine::loop() {
-print("%i\n\r", digitalRead(GRIPPER_SWITCH));
+	if ((line(0) || line(8)) && pitch() < -10)
+		go(70, 70);
+	else if (line(0) && line(8))
+		go(70, 70), delayMs(500);
+	else if (line(8))
+		go(-90, 90);
+	else if (line(0))
+		go(90, -90);
+	else if (line(1))
+		go(70, -20);
+	else if (line(2))
+		go(60, 10);
+	else if (line(3))
+		go(50, 20);
+	else if (line(5))
+		go(20, 50);
+	else if (line(6))
+		go(10, 60);
+	else if (line(7))
+		go(-20, 70);
+	else
+		go(70, 70);
 }
 
 /** Generic actions, use them as templates
@@ -1071,18 +1117,28 @@ void RobotLine::rcjLine() {
 	// actionSet(actionLineFollow); // The next action is line following.
 }
 
-/** Right side - rear sensor distance.
-@return - in mm
+/** Front distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
+@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+				rest will be averaged. Keeps returning 0 till all the sample is read.
+				If sampleCount is 0, it will not wait but will just return the last value.
+@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+				Therefore, lower sigma number will remove more errornous readings.
+@return - distance in mm
 */
-uint16_t RobotLine::rightBack() {
+uint16_t RobotLine::rightBack(uint8_t sampleCount, uint8_t sigmaCount) {
 	return mrm_lid_can_b->distance(3); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
-/** Right side - front sensor distance.
-@return - in mm
+/** Front distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
+@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+				rest will be averaged. Keeps returning 0 till all the sample is read.
+				If sampleCount is 0, it will not wait but will just return the last value.
+@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+				Therefore, lower sigma number will remove more errornous readings.
+@return - distance in mm
 */
-uint16_t RobotLine::rightFront() {
-	return mrm_lid_can_b->distance(2) + 10; // Correct all sensors so that they return the same value for the same physical distance.
+uint16_t RobotLine::rightFront(uint8_t sampleCount, uint8_t sigmaCount) {
+	return mrm_lid_can_b->distance(2); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Roll

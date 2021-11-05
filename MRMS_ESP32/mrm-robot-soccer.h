@@ -36,9 +36,14 @@ public:
 	RobotSoccer(char name[] = (char*)"RCJ Soccer");
 
 	/** Rear distance to wall
+	@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+				rest will be averaged. Keeps returning 0 till all the sample is read.
+				If sampleCount is 0, it will not wait but will just return the last value.
+	@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+				Therefore, lower sigma number will remove more errornous readings.
 	@return - in mm
 	*/
-	uint16_t back();
+	uint16_t back(uint8_t sampleCount = 0, uint8_t sigmaCount = 1);
 
 	/** Ball's direction
 	@return - robot's front is 0�, positive angles clockwise, negative anti-clockwise. Back of the robot is 180�.
@@ -84,9 +89,14 @@ public:
 	void catchBall();
 
 	/** Front distance to wall
+	@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+				rest will be averaged. Keeps returning 0 till all the sample is read.
+				If sampleCount is 0, it will not wait but will just return the last value.
+	@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+				Therefore, lower sigma number will remove more errornous readings.
 	@return - in mm
 	*/
-	uint16_t front();
+	uint16_t front(uint8_t sampleCount = 0, uint8_t sigmaCount = 1);
 
 	/** Control of a robot with axles connected in a star formation, like in a RCJ soccer robot with omni wheels. Motor 0 is at 45 degrees, 1 at 135, 2 at -135, 3 at -45.
 	@param speed - 0 to 100.
@@ -119,8 +129,13 @@ public:
 
 	/** Front distance to wall
 	@return - in mm
+	@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+				rest will be averaged. Keeps returning 0 till all the sample is read.
+				If sampleCount is 0, it will not wait but will just return the last value.
+	@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+				Therefore, lower sigma number will remove more errornous readings.
 	*/
-	uint16_t left();
+	uint16_t left(uint8_t sampleCount = 0, uint8_t sigmaCount = 1);
 
 	/** Line sensor
 	@param transistorNumber - starts from 0 and end value depends on sensor. Usually 7 (for mrm-ref-can8) or 8 (for mrm-ref-can9).
@@ -147,9 +162,14 @@ public:
 	float pitch();
 
 	/** Right distance to wall
+	@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+				rest will be averaged. Keeps returning 0 till all the sample is read.
+				If sampleCount is 0, it will not wait but will just return the last value.
+	@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
+				Therefore, lower sigma number will remove more errornous readings.
 	@return - in mm
 	*/
-	uint16_t right();
+	uint16_t right(uint8_t sampleCount = 0, uint8_t sigmaCount = 1);
 
 	/** Roll
 	@return - Roll in degrees. Inclination to the left or right. Values -90 - 90. Leveled robot shows 0�.
