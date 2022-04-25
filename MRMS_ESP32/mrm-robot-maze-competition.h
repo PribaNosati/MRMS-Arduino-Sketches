@@ -1,69 +1,69 @@
 #pragma once
 #include <mrm-action.h>
 #include <mrm-robot.h>
+#include <mrm-robot-maze.h>
 
-enum Direction{UP, LEFT, DOWN, RIGHT, NOWHERE};
-enum LedSign { MAZE_IMU_FOLLOW, MAZE_LED_PAUSE, MAZE_LED_PLAY, MAZE_OBSTACLE_L, MAZE_OBSTACLE_R, MAZE_WALL_DOWN_FOLLOW, 
-	MAZE_WALL_LEFT_FOLLOW, MAZE_WALL_RIGHT_FOLLOW, MAZE_WALL_UP_FOLLOW }; // For mrm-8x8 display.
-enum WallStatus{ NO_WALL, WALL_UNKNOWN, WALL_WITH_VICTIM, WALL_WITHOUT_VICTIM};
-enum TileSurvace{ SURFACE_BLACK, SURFACE_SILVER, SURFACE_UNKNOWN, SURFACE_WHITE};
+// enum Direction{UP, LEFT, DOWN, RIGHT, NOWHERE};
+// enum LedSign { MAZE_IMU_FOLLOW, MAZE_LED_PAUSE, MAZE_LED_PLAY, MAZE_WALL_DOWN_FOLLOW, MAZE_WALL_LEFT_FOLLOW, MAZE_WALL_RIGHT_FOLLOW, MAZE_WALL_UP_FOLLOW }; // For mrm-8x8 display.
+// enum WallStatus{ NO_WALL, WALL_UNKNOWN, WALL_WITH_VICTIM, WALL_WITHOUT_VICTIM};
+// enum TileSurvace{ SURFACE_BLACK, SURFACE_SILVER, SURFACE_UNKNOWN, SURFACE_WHITE};
+
+class Tile;
+// /** Class Tile stores data for tiles: walls, etc. The whole maze consists of one single-linked chain of Tile objects, chained using _chain pointers.
+// */
+// class Tile {
+
+// 	uint8_t _wall; // 1 byte stores statuses for all 2 walls enclosing the tile. Bit 7:6 - right, 5:4 - down, 3:2 - left, 1:0 - up.
+// 	uint8_t _surface; // 1 byte stores surface and other data. Bit 7:6 - surface. The rest 6 bytes can be freely used. This feature is not in use yet.
+// 	Tile* _chain; // Pointer to the next tile in chain.
+
+// public:
+// 	static Tile* first; // Static member variable (one instance for the whole class), pointing to the first tile of the chain.
+
+// 	Direction breadcrumb; // Stores direction of the previous tile, needed for Tremaux algorithm. This sequence is independent of the one made by _chain variable, which is only used for traversing the chain.
+// 	int8_t x; // x coordinate of the tile. Increasing in RIGHT direction.
+// 	int8_t y; // y coordinate of the tile. Increasing in UP direction.
+
+// 	/** Constructor
+// 	@param x - x coordinate.
+// 	@param y - y coordinate.
+// 	@param breadcrumb - way back to the start tile.
+// 	*/
+// 	Tile(int8_t x, int8_t y, Direction breadcrumb);
+
+// 	/** Enables traversing the chain from outside of the class.
+// 	@return - link to the next tile in chain.
+// 	*/
+// 	Tile* next() { return _chain; }
+
+// 	/** Existence of the wall, victims, etc.
+// 	@param direction - direction of the wall.
+// 	@return status.
+// 	*/
+// 	WallStatus wallGet(Direction direction) { return (WallStatus)((_wall >> (direction * 2)) & 0b11); }
+
+// 	/** Sets wall's status.
+// 	@param direction - direction of the wall.
+// 	@param status - new status.
+// 	*/
+// 	void wallSet(Direction direction, WallStatus wallStatus) { _wall &= ~(0b11 << (direction * 2)); _wall |= (wallStatus << (direction * 2)); }
+// };
 
 
-/** Class Tile stores data for tiles: walls, etc. The whole maze consists of one single-linked chain of Tile objects, chained using _chain pointers.
-*/
-class Tile {
-
-	uint8_t _wall; // 1 byte stores statuses for all 2 walls enclosing the tile. Bit 7:6 - right, 5:4 - down, 3:2 - left, 1:0 - up.
-	uint8_t _surface; // 1 byte stores surface and other data. Bit 7:6 - surface. The rest 6 bytes can be freely used. This feature is not in use yet.
-	Tile* _chain; // Pointer to the next tile in chain.
-
-public:
-	static Tile* first; // Static member variable (one instance for the whole class), pointing to the first tile of the chain.
-
-	Direction breadcrumb; // Stores direction of the previous tile, needed for Tremaux algorithm. This sequence is independent of the one made by _chain variable, which is only used for traversing the chain.
-	int8_t x; // x coordinate of the tile. Increasing in RIGHT direction.
-	int8_t y; // y coordinate of the tile. Increasing in UP direction.
-
-	/** Constructor
-	@param x - x coordinate.
-	@param y - y coordinate.
-	@param breadcrumb - way back to the start tile.
-	*/
-	Tile(int8_t x, int8_t y, Direction breadcrumb);
-
-	/** Enables traversing the chain from outside of the class.
-	@return - link to the next tile in chain.
-	*/
-	Tile* next() { return _chain; }
-
-	/** Existence of the wall, victims, etc.
-	@param direction - direction of the wall.
-	@return status.
-	*/
-	WallStatus wallGet(Direction direction) { return (WallStatus)((_wall >> (direction * 2)) & 0b11); }
-
-	/** Sets wall's status.
-	@param direction - direction of the wall.
-	@param status - new status.
-	*/
-	void wallSet(Direction direction, WallStatus wallStatus) { _wall &= ~(0b11 << (direction * 2)); _wall |= (wallStatus << (direction * 2)); }
-};
-
-
-/* All the Action-classes have to be forward declared here (before RobotMaze) as RobotMaze declaration uses them. The other option would be
-not to declare them here, but in that case Action-objects in RobotMaze will have to be declared as ActionBase class, forcing downcast later in code, if
+/* All the Action-classes have to be forward declared here (before RobotMazeCompetition) as RobotMazeCompetition declaration uses them. The other option would be
+not to declare them here, but in that case Action-objects in RobotMazeCompetition will have to be declared as ActionBase class, forcing downcast later in code, if
 derived functions are used.*/
-class ActionDecide;
-class ActionMap;
-class ActionMove;
-class ActionMoveAhead;
-class ActionMoveTurn;
-class ActionRescueMaze;
-class ActionWallsTest;
+class ActionDecideCompetition;
+class ActionMapCompetition;
+class ActionMoveCompetition;
+class ActionMoveAheadCompetition;
+class ActionMoveTurnCompetition;
+class ActionRescueMazeCompetition;
+class ActionWallsTestCompetition;
 
 /** Robot for RCJ Rescue Maze, a class derived from the base Robot class.
 */
-class RobotMaze : public Robot {
+class RobotMazeCompetition : public Robot {
 	// Change these values to get optimal robot's behaviour.
 	const uint16_t IMU_FOLLOW_STRENGTH = 5; // A bigger value increases feedback.
 	const uint16_t MAZE_MAX_STEPS = 0xFFFF; // Can be used to stop the robot after a certain number of steps, for example for debugging purpose.
@@ -76,17 +76,17 @@ class RobotMaze : public Robot {
 	const uint16_t WALL_FOLLOW_ROTATION_STRENGTH = 1.1; // A bigger value will force the robot to correct its alignment to a wall more vigorously.
 
 	// Actions' declarations
-	ActionDecide* actionDecide;
+	ActionDecideCompetition* actionDecide;
 	ActionBase* actionGoStraightAhead;
-	ActionMap* actionMap;
-	ActionMove* actionMove;
-	ActionMoveAhead* actionMoveAhead;
-	ActionMoveTurn* actionMoveTurn;
-	ActionRescueMaze* actionRescueMaze;
+	ActionMapCompetition* actionMap;
+	ActionMoveCompetition* actionMove;
+	ActionMoveAheadCompetition* actionMoveAhead;
+	ActionMoveTurnCompetition* actionMoveTurn;
+	ActionRescueMazeCompetition* actionRescueMaze;
 	ActionStop* actionStop;
-	ActionWallsTest* actionWallsTest;
+	ActionWallsTestCompetition* actionWallsTest;
 
-	Direction directionCurrent; // Current robot's direction.
+	Direction directionCurrent; // Current robot's (in maze's perspective) direction.
 
 	float imuLastValid = 9999; // Last measured compass value. Important for moving ahead when no wall available.
 
@@ -102,7 +102,7 @@ public:
 	/** Constructor
 	@param name - it is also used for Bluetooth so a Bluetooth client (like a phone) will list the device using this name.
 	*/
-	RobotMaze(char name[] = (char*)"RCJ Maze");
+	RobotMazeCompetition(char name[] = (char*)"RCJ Maze");
 
 	/** Stores custom bitmaps in mrm-led8x8a.
 	*/
@@ -254,7 +254,7 @@ start conditions will be in the object itself.
 issue commands.
 */
 
-/** Actions specific for a RobotMaze robot will be defined here. They are all derived from ActionBase class (inheriting its methods and properties). 
+/** Actions specific for a RobotMazeCompetition robot will be defined here. They are all derived from ActionBase class (inheriting its methods and properties). 
 They also all feature perform() function, the one that is called to do what they are supposed to. Their constructors always call base class' constructors [ActionBase(...)] with 3 or more 
 parameters specified here.
 First parameter is robot and is always the same. 
@@ -267,84 +267,84 @@ The fourth pareameter is menu level. When omitted, the action will not be a part
 
 /** Action that decides what to do next, using Tremaux algorithm. If a not-visited direction exists, go there. If not, return to the tile robot came from.
 */
-class ActionDecide : public ActionBase {
-	void perform() { ((RobotMaze*)_robot)->decide(); }
+class ActionDecideCompetition : public ActionBase {
+	void perform() { ((RobotMazeCompetition*)_robot)->decide(); }
 public:
-	ActionDecide(Robot* robot) : ActionBase(robot, "", "") {}
+	ActionDecideCompetition(Robot* robot) : ActionBase(robot, "", "") {}
 };
 
 /** Maps walls detected and other external readings in variables.
 */
-class ActionMap : public ActionBase {
-	void perform() { ((RobotMaze*)_robot)->map(); }
+class ActionMapCompetition : public ActionBase {
+	void perform() { ((RobotMazeCompetition*)_robot)->map(); }
 public:
-	ActionMap(Robot* robot) : ActionBase(robot, "", "") {}
+	ActionMapCompetition(Robot* robot) : ActionBase(robot, "", "") {}
 };
 
 /** Base class for movement actions.
 */
-class ActionMove : public ActionBase {
-	void perform() { ((RobotMaze*)_robot)->move(); }
+class ActionMoveCompetition : public ActionBase {
+	void perform() { ((RobotMazeCompetition*)_robot)->move(); }
 public:
 	Direction direction; // Initial direction is stored to be recalled when using the action.
-	ActionMove(Robot* robot) : ActionBase(robot, "", "") {}
+	ActionMoveCompetition(Robot* robot) : ActionBase(robot, "", "") {}
 };
 
 /** Test - move 1 tile ahead.
 */
-class ActionMove1TileTest : public ActionBase {
-	void perform() { ((RobotMaze*)_robot)->moveAhead1TileTest();}
+class ActionMove1TileTestCompetition : public ActionBase {
+	void perform() { ((RobotMazeCompetition*)_robot)->moveAhead1TileTest();}
 public:
-	ActionMove1TileTest(Robot* robot) : ActionBase(robot, "1ti", "Go 1 tile", 1) {}
+	ActionMove1TileTestCompetition(Robot* robot) : ActionBase(robot, "1ti", "Go 1 tile", 1) {}
 };
 
 /** Go straight ahead.
 */
-class ActionMoveAhead : public ActionMove {
-	void perform() { ((RobotMaze*)_robot)->moveAhead(); }
+class ActionMoveAheadCompetition : public ActionMove {
+	void perform() { ((RobotMazeCompetition*)_robot)->moveAhead(); }
 public:
-	ActionMoveAhead(Robot* robot) : ActionMove(robot) {}
+	ActionMoveAheadCompetition(Robot* robot) : ActionMove(robot) {}
 };
 
 /** Turn.
 */
-class ActionMoveTurn : public ActionMove {
-	void perform() { ((RobotMaze*)_robot)->moveTurn(); }
+class ActionMoveTurnCompetition : public ActionMove {
+	void perform() { ((RobotMazeCompetition*)_robot)->moveTurn(); }
 public:
 	float endAngle; // End condition: target angle.
 	float turnByCCW; // Number of degrees to turn CCW (counter-clockwise).
-	ActionMoveTurn(Robot* robot) : ActionMove(robot) {}
+	ActionMoveTurnCompetition(Robot* robot) : ActionMove(robot) {}
 };
 
 /** Turn.
 */
-class ActionMoveTurnTest : public ActionBase {
-	void perform() { ((RobotMaze*)_robot)->moveTurnTest(); }
+class ActionMoveTurnTestCompetition : public ActionBase {
+	void perform() { ((RobotMazeCompetition*)_robot)->moveTurnTest(); }
 public:
-	ActionMoveTurnTest(Robot* robot) : ActionBase(robot, "tte", "Turn test", 1) {}
+	ActionMoveTurnTestCompetition(Robot* robot) : ActionBase(robot, "tte", "Turn test", 1) {}
 };
 
 
 /** Start RCJ Rescue Maze run.
 */
-class ActionRescueMaze : public ActionBase {
-	void perform() { ((RobotMaze*)_robot)->rescueMaze(); }
+class ActionRescueMazeCompetition : public ActionBase {
+	void perform() { ((RobotMazeCompetition*)_robot)->rescueMaze(); }
 public:
-	ActionRescueMaze(Robot* robot) : ActionBase(robot, "maz", "Rescue Maze", 1) {}
+	ActionRescueMazeCompetition(Robot* robot) : ActionBase(robot, "maz", "Rescue Maze", 1) {}
 };
 
 /** Test for Mecanum wheels. Used only when the robot is rigged with mecanum wheels.
 */
-class ActionOmniWheelsTest : public ActionBase {
-	void perform() { ((RobotMaze*)_robot)->omniWheelsTest(); }
+class ActionOmniWheelsTestCompetition : public ActionBase {
+	void perform() { ((RobotMazeCompetition*)_robot)->omniWheelsTest(); }
 public:
-	ActionOmniWheelsTest(Robot* robot) : ActionBase(robot, "omn", "Test omni wh.", 1) {}
+	ActionOmniWheelsTestCompetition(Robot* robot) : ActionBase(robot, "omn", "Test omni wh.", 1) {}
 };
 
 /** Test, checking and displaying all walls.
 */
-class ActionWallsTest : public ActionBase {
-	void perform() { ((RobotMaze*)_robot)->wallsTest(); }
+class ActionWallsTestCompetition : public ActionBase {
+	void perform() { ((RobotMazeCompetition*)_robot)->wallsTest(); }
 public:
-	ActionWallsTest(Robot* robot) : ActionBase(robot, "wlt", "Walls test", 1) {}
+	ActionWallsTestCompetition(Robot* robot) : ActionBase(robot, "wlt", "Walls test", 1) {}
 };

@@ -38,9 +38,9 @@ RobotMin::RobotMin(char name[]) : Robot(name) {
 
 
 	// Set buttons' actions
-	mrm_8x8a->actionSet(_actionMenuMain, 0); // Stop and display menu
-	mrm_8x8a->actionSet(_actionLoop, 1); // Free-defined action.
-	//mrm_8x8a->actionSet(_actionCANBusStress, 2); // Starts stress test.
+	//mrm_8x8a->actionSet(_actionCANBusStress, 1); // Starts stress test.
+	mrm_8x8a->actionSet(_actionLoop, 2); // Free-defined action.
+	mrm_8x8a->actionSet(_actionMenuMain, 3); // Stop and display menu
 	// Put Your buttons' actions here.
 
 	// Upload custom bitmaps into mrm-8x8a.
@@ -51,6 +51,11 @@ RobotMin::RobotMin(char name[]) : Robot(name) {
 */
 void RobotMin::loop() {
 	#define LIST_ALL 0
+	#define TEST1 0
+	#define TEST2 1
+	#define TEST3 0
+	#define TEST4 0
+
 	#if LIST_ALL
 	uint8_t cnt = 0;
     uint8_t i = 0;
@@ -69,7 +74,6 @@ void RobotMin::loop() {
     }while(cnt != 0);
     end();
 	#endif
-	#define TEST1 0
 	#if TEST1
 	// if (setup()){
 	// 	mrm_bldc4x2_5->speedSet(0, 127);
@@ -92,7 +96,6 @@ void RobotMin::loop() {
 	// print("Enc:%i\n\r", mrm_bldc4x2_5->reading(0));
 	#endif
 
-	#define TEST2 1
 	#if TEST2
 	#define OUTPUT_MOTORS 1
 	#define TOP_SPEED_TEST 100 //30
@@ -131,8 +134,8 @@ void RobotMin::loop() {
 	// }
 
 	
-	#define MRM_LID_CAN_B 0
-	#define MRM_LID_COUNT 14
+	#define MRM_LID_CAN_B 1
+	#define MRM_LID_COUNT 3
 	#if MRM_LID_CAN_B
 	// mrm-lid-can-b
 	static uint32_t lastLidarMs = 0;
@@ -159,7 +162,7 @@ void RobotMin::loop() {
 	#endif
 
 
-	#define MRM_LID_CAN_B2 1
+	#define MRM_LID_CAN_B2 0
 	#if MRM_LID_CAN_B2
 	// mrm-lid-can-b2
 	static uint32_t lastLidar4Ms = 0;
@@ -268,11 +271,15 @@ void RobotMin::loop() {
 	// actionSet(_actionLoop);
 	#endif
 
-	#define TEST3 0
 	#if TEST3
 	print("%i %i\n\r", mrm_therm_b_can->reading(0),  mrm_therm_b_can->reading(1));
 	if ( mrm_therm_b_can->reading(0) > 50 ||  mrm_therm_b_can->reading(1) > 50)
 		end();
 	delayMs(100);
+	#endif
+
+	#if TEST4
+		mrm_8x8a->devicesScan(false, 0b0000000000000001);
+		delayMs(1);
 	#endif
 }

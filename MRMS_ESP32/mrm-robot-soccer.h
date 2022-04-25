@@ -7,9 +7,15 @@
 #define BARRIER_MID_VALUE 600 // 0 - 4095
 #define SOCCER_ANGULAR_SPEED_LIMIT 40 // 0 - 100
 #define SOCCER_BARRIER_PIN 35 // Not to be changed unless pin reassigned
-#define SOCCER_BACK_DISTANCE_WHEN_GOALIE 200 // Goalie's optimum distance when in front of won goal
+#define SOCCER_BACK_DISTANCE_WHEN_GOALIE 300 // Goalie's optimum distance when in front of won goal
 #define SOCCER_SIDE_DISTANCE_WHEN_CENTERED 700 // Distance left and right when in the centre of the field
 #define SOCCER_SPEED_LIMIT 60 // 0 - 127
+
+class ActionSoccerLoop0;
+class ActionSoccerLoop1;
+class ActionSoccerLoop2;
+class ActionSoccerLoop3;
+class ActionSoccerLoop4;
 
 /** Robot for RCJ Soccer
 */
@@ -23,6 +29,11 @@ class RobotSoccer : public Robot {
 	ActionBase* actionGoalApproach;
 	ActionBase* actionIdle;
 	ActionBase* actionLineAvoid;
+	ActionSoccerLoop0* actionLoop0;
+	ActionSoccerLoop1* actionLoop1;
+	ActionSoccerLoop2* actionLoop2;
+	ActionSoccerLoop3* actionLoop3;
+	ActionSoccerLoop4* actionLoop4;
 	ActionBase* actionPlay;
 
 	float headingToMaintain; // Heading towards opponent's goal.
@@ -36,7 +47,7 @@ public:
 	RobotSoccer(char name[] = (char*)"RCJ Soccer");
 
 	/** Rear distance to wall
-	@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+	@param sampleCount - Number or readings. 40% of the readings, with extreme values, will be discarded and the
 				rest will be averaged. Keeps returning 0 till all the sample is read.
 				If sampleCount is 0, it will not wait but will just return the last value.
 	@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
@@ -89,7 +100,7 @@ public:
 	void catchBall();
 
 	/** Front distance to wall
-	@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+	@param sampleCount - Number or readings. 40% of the readings, with extreme values, will be discarded and the
 				rest will be averaged. Keeps returning 0 till all the sample is read.
 				If sampleCount is 0, it will not wait but will just return the last value.
 	@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
@@ -129,7 +140,7 @@ public:
 
 	/** Front distance to wall
 	@return - in mm
-	@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+	@param sampleCount - Number or readings. 40% of the readings, with extreme values, will be discarded and the
 				rest will be averaged. Keeps returning 0 till all the sample is read.
 				If sampleCount is 0, it will not wait but will just return the last value.
 	@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
@@ -152,6 +163,14 @@ public:
 	*/
 	void loop();
 
+	/** Generic actions, use them as templates
+	*/
+	void loop0();
+	void loop1();
+	void loop2();
+	void loop3();
+	void loop4();
+
 	/** Starts robot.
 	*/
 	void play();
@@ -162,7 +181,7 @@ public:
 	float pitch();
 
 	/** Right distance to wall
-	@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+	@param sampleCount - Number or readings. 40% of the readings, with extreme values, will be discarded and the
 				rest will be averaged. Keeps returning 0 till all the sample is read.
 				If sampleCount is 0, it will not wait but will just return the last value.
 	@param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
@@ -203,6 +222,36 @@ The third parameter is a name of the action, again displayed in menu. For "soc",
 for no-menu actions.
 The fourth pareameter is menu level. When omitted, the action will not be a part of the menu. Use 1 otherwise. Higher level numbers will display the action in submenues, not used here.
 */
+
+class ActionSoccerLoop0 : public ActionBase {
+	void perform() { ((RobotSoccer*)_robot)->loop0(); }
+public:
+	ActionSoccerLoop0(RobotSoccer* robot) : ActionBase(robot, "lo0", "Loop 0", 8) {}
+};
+
+class ActionSoccerLoop1 : public ActionBase {
+	void perform() { ((RobotSoccer*)_robot)->loop1(); }
+public:
+	ActionSoccerLoop1(RobotSoccer* robot) : ActionBase(robot, "lo1", "Loop 1", 8) {}
+};
+
+class ActionSoccerLoop2 : public ActionBase {
+	void perform() { ((RobotSoccer*)_robot)->loop2(); }
+public:
+	ActionSoccerLoop2(RobotSoccer* robot) : ActionBase(robot, "lo2", "Loop 2", 8) {}
+};
+
+class ActionSoccerLoop3 : public ActionBase {
+	void perform() { ((RobotSoccer*)_robot)->loop3(); }
+public:
+	ActionSoccerLoop3(RobotSoccer* robot) : ActionBase(robot, "lo3", "Loop 3", 8) {}
+};
+
+class ActionSoccerLoop4 : public ActionBase {
+	void perform() { ((RobotSoccer*)_robot)->loop4(); }
+public:
+	ActionSoccerLoop4(RobotSoccer* robot) : ActionBase(robot, "lo4", "Loop 3", 8) {}
+};
 
 /** Bounce
 */

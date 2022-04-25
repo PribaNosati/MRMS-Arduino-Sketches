@@ -9,15 +9,16 @@
 #include "mrm-robot-line.h"
 #include <mrm-servo.h>
 #include <mrm-therm-b-can.h>
+#include <mrm-us-b.h>
 
 /** Constructor
 @param name - it is also used for Bluetooth so a Bluetooth client (like a phone) will list the device using this name.
 */
 RobotLine::RobotLine(char name[]) : Robot(name) {
 	// MotorGroup class drives the motors.
-	// 2nd, 4th, 6th, and 8th parameters are output connectors of the controller (0 - 3, meaning 1 - 4. connector). 2nd one must be connected to LB (Left-Back) motor,
-	// 4th to LF (Left-Front), 6th to RF (Right-Front), and 8th to RB (Right-Back). Therefore, You can connect motors freely, but have to
-	// adjust the parameters here. In this example output (connector) 3 is LB, etc.
+	// 2nd, 4th, 6th, and 8th parameters are output connectors of the controller (number 0 - 3, meaning 1. - 4. connector). 
+	// 2nd one must be connected to LB (Left-Back) motor, 4th to LF (Left-Front), 6th to RF (Right-Front), and 8th to RB (Right-Back). 
+	// Therefore, You can connect motors freely, but have to adjust the parameters here. In this example output (connector) 0 is LB, etc.
 	motorGroup = new MotorGroupDifferential(this, mrm_mot4x3_6can, 0, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 3);
 
 	// All the actions will be defined here; the objects will be created.
@@ -65,6 +66,16 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 	actionAdd(actionLoop8);
 	actionAdd(actionLoop9);
 
+#define CUSTOMIZE_SERVO 0
+#if CUSTOMIZE_SERVO
+	servoUpAdd = preferences->getInt("srvUpAdd"); // Servo up correction. Positive nubers lift servo.
+	preferences->putInt("srvDown", 0); // Uncomment to correct (add to) servo-up positions. 
+	if (servoUpAdd != 0)
+		print("Servo-up add: %i\n\r", servoUpAdd);
+#else
+	servoUpAdd = 0;
+#endif
+
 	// Servo motors. Note that some pins are not appropriate for PWM (servo)
 	mrm_servo->add(18, (char*)"ServoUp", 0, 300, 0.5, 2.5); // Data for mrm-rds5060-300
 	mrm_servo->add(19, (char*)"ServoR", 0, 180, 0.5, 2.5); // Data for mrm-ps-1109hb
@@ -94,48 +105,47 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 	// If uncommented, robot will immediately after power-on start executing loop()
 	//actionSet(_actionLoop);
 
-	armClose();
+	armIdle();
 }
 
 /** Arm will go to ball-catch position.
 */
 void RobotLine::armCatch() {
 	mrm_servo->write(LIFT_SERVO_DOWN, 0); // Lower the arm. Parameter 0 defines servo, in this case lift-servo. LIFT_SERVO_DOWN is angle.
-	mrm_servo->write(CATCH_SERVO_L_CATCH, 1); // Catch the ball. Parameter 1 - catch-servo. CATCH_SERVO_CLOSE is angle.
-	mrm_servo->write(CATCH_SERVO_R_CATCH, 2); // 
+	mrm_servo->write(CATCH_SERVO_R_CATCH, 1); // Catch the ball. Parameter 1 - R catch-servo. CATCH_SERVO_CLOSE is angle.
+	mrm_servo->write(CATCH_SERVO_L_CATCH, 2); // 
 }
 
 /** Arm will go to ball-catch ready position.
 */
 void RobotLine::armCatchReady() {
-	mrm_servo->write(LIFT_SERVO_DOWN, 0); // Lower the arm.
-	mrm_servo->write(CATCH_SERVO_L_OPEN, 1); // 
-	mrm_servo->write(CATCH_SERVO_R_OPEN, 2); // 
+	mrm_servo->write(LIFT_SERVO_DOWN + servoUpAdd, 0); // Lower the arm.
+	mrm_servo->write(CATCH_SERVO_R_OPEN, 1); // 
+	mrm_servo->write(CATCH_SERVO_L_OPEN, 2); // 
 }
 
-/** 
-*/
-void RobotLine::armClose() {
-	mrm_servo->write(LIFT_SERVO_DOWN, 0); // Lower the arm.
-	mrm_servo->write(CATCH_SERVO_L_CLOSE, 1); // 
-	mrm_servo->write(CATCH_SERVO_R_CLOSE, 2); // 
-}
-
-
-/** 
+/** Arm will drop the ball
 */
 void RobotLine::armDrop() {
-	mrm_servo->write(LIFT_SERVO_UP, 0); // Lift the arm.
-	mrm_servo->write(CATCH_SERVO_L_OPEN, 1); // 
-	mrm_servo->write(CATCH_SERVO_R_OPEN, 2); // 
+	mrm_servo->write(LIFT_SERVO_UP + servoUpAdd, 0); // Lift the arm.
+	mrm_servo->write(CATCH_SERVO_R_OPEN, 1); // 
+	mrm_servo->write(CATCH_SERVO_L_OPEN, 2); // 
+}
+
+/** Arm in idle (closed - down) position
+*/
+void RobotLine::armIdle() {
+	mrm_servo->write(LIFT_SERVO_IDLE + servoUpAdd, 0); // Lower the arm.
+	mrm_servo->write(CATCH_SERVO_R_CLOSE, 1); // 
+	mrm_servo->write(CATCH_SERVO_L_CLOSE, 2); // 
 }
 
 /** 
 */
 void RobotLine::armUp() {
+	mrm_servo->write(LIFT_SERVO_UP + servoUpAdd, 0); // Lift the arm.
 	mrm_servo->write(CATCH_SERVO_L_CLOSE, 1); // 
 	mrm_servo->write(CATCH_SERVO_R_CLOSE, 2); // 
-	mrm_servo->write(LIFT_SERVO_UP, 0); // Lift the arm.
 }
 
 /** Barrier interrupted?
@@ -169,6 +179,7 @@ void RobotLine::bitmapsSet() {
 	green[6] = 0b11100001;
 	green[7] = 0b11111111;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_EVACUATION_ZONE);
+	delayMs(1);
 
 	// Full line, no marks
 	for (uint8_t i = 0; i < 8; i++)
@@ -176,6 +187,7 @@ void RobotLine::bitmapsSet() {
 	for (uint8_t i = 0; i < 8; i++)
 		red[i] = 0;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_LINE_FULL);
+	delayMs(1);
 
 	// Full line, both marks
 	for (uint8_t i = 0; i < 8; i++)
@@ -191,6 +203,7 @@ void RobotLine::bitmapsSet() {
 	/* Store this bitmap in mrm-8x8a. The 3rd parameter is bitmap's address. If You want to define new bitmaps, expand LedSign enum with
 	Your names, and use the new values for Your bitmaps. This parameter can be a plain number, but enum keeps thing tidy.*/
 	mrm_8x8a->bitmapCustomStore(red, green, LED_LINE_FULL_BOTH_MARKS);
+	delayMs(1);
 
 	// Full line, left mark.
 	for (uint8_t i = 0; i < 8; i++)
@@ -204,6 +217,7 @@ void RobotLine::bitmapsSet() {
 	red[6] = 0b00000000;
 	red[7] = 0b00000000;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_LINE_FULL_MARK_LEFT);
+	delayMs(1);
 
 	// Full line, right mark.
 	for (uint8_t i = 0; i < 8; i++)
@@ -217,6 +231,7 @@ void RobotLine::bitmapsSet() {
 	red[6] = 0b00000000;
 	red[7] = 0b00000000;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_LINE_FULL_MARK_RIGHT);
+	delayMs(1);
 
 	// Full crossing, both marks.
 	green[0] = 0b00000000;
@@ -237,6 +252,7 @@ void RobotLine::bitmapsSet() {
 	red[6] = 0b00000000;
 	red[7] = 0b00000000;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_FULL_CROSSING_BOTH_MARKS);
+	delayMs(1);
 
 	// Full crossing, mark left.
 	green[0] = 0b00000000;
@@ -257,6 +273,7 @@ void RobotLine::bitmapsSet() {
 	red[6] = 0b00000000;
 	red[7] = 0b00000000;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_FULL_CROSSING_MARK_LEFT);
+	delayMs(1);
 
 	// Full crossing, mark right.
 	green[0] = 0b00000000;
@@ -277,6 +294,7 @@ void RobotLine::bitmapsSet() {
 	red[6] = 0b00000000;
 	red[7] = 0b00000000;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_FULL_CROSSING_MARK_RIGHT);
+	delayMs(1);
 
 	// Full crossing, no marks.
 	green[0] = 0b00011000;
@@ -290,6 +308,7 @@ void RobotLine::bitmapsSet() {
 	for (uint8_t i = 0; i < 8; i++)
 		red[i] = 0;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_FULL_CROSSING_NO_MARK);
+	delayMs(1);
 
 	// Half crossing, mark right.
 	green[0] = 0b00011000;
@@ -310,6 +329,7 @@ void RobotLine::bitmapsSet() {
 	red[6] = 0b00000000;
 	red[7] = 0b00000000;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_HALF_CROSSING_MARK_RIGHT);
+	delayMs(1);
 
 	// Half crossing, mark left.
 	green[0] = 0b00011000;
@@ -330,6 +350,7 @@ void RobotLine::bitmapsSet() {
 	red[6] = 0b00000000;
 	red[7] = 0b00000000;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_HALF_CROSSING_MARK_LEFT);
+	delayMs(1);
 
 	// Half crossing right, no mark.
 	green[0] = 0b00011000;
@@ -350,6 +371,7 @@ void RobotLine::bitmapsSet() {
 	red[6] = 0b00000000;
 	red[7] = 0b00000000;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_HALF_CROSSING_RIGHT_NO_MARK);
+	delayMs(1);
 
 	// Half crossing left, no mark
 	green[0] = 0b00011000;
@@ -370,6 +392,7 @@ void RobotLine::bitmapsSet() {
 	red[6] = 0b00000000;
 	red[7] = 0b00000000;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_HALF_CROSSING_LEFT_NO_MARK);
+	delayMs(1);
 
 	// Interrupted line.
 	green[0] = 0b00011000;
@@ -383,6 +406,7 @@ void RobotLine::bitmapsSet() {
 	for (uint8_t i = 0; i < 8; i++)
 		red[i] = 0;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_LINE_INTERRUPTED);
+	delayMs(1);
 
 	// Curve left.
 	green[0] = 0b00000000;
@@ -396,6 +420,7 @@ void RobotLine::bitmapsSet() {
 	for (uint8_t i = 0; i < 8; i++)
 		red[i] = 0;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_CURVE_LEFT);
+	delayMs(1);
 
 	// Curve right.
 	green[0] = 0b00000000;
@@ -409,6 +434,7 @@ void RobotLine::bitmapsSet() {
 	for (uint8_t i = 0; i < 8; i++)
 		red[i] = 0;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_CURVE_RIGHT);
+	delayMs(1);
 
 	// Obstacle.
 	green[0] = 0b00011000;
@@ -422,6 +448,7 @@ void RobotLine::bitmapsSet() {
 	for (uint8_t i = 0; i < 8; i++)
 		red[i] = 0;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_OBSTACLE);
+	delayMs(1);
 
 	// Around obstacle left.
 	green[0] = 0b00000000;
@@ -435,6 +462,7 @@ void RobotLine::bitmapsSet() {
 	for (uint8_t i = 0; i < 8; i++)
 		red[i] = 0;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_OBSTACLE_AROUND_LEFT);
+	delayMs(1);
 
 	// Around obstacle right.
 	green[0] = 0b00000000;
@@ -448,6 +476,7 @@ void RobotLine::bitmapsSet() {
 	for (uint8_t i = 0; i < 8; i++)
 		red[i] = 0;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_OBSTACLE_AROUND_RIGHT);
+	delayMs(1);
 
 	// Pause.
 	green[0] = 0b11100111;
@@ -461,6 +490,7 @@ void RobotLine::bitmapsSet() {
 	for (uint8_t i = 0; i < 8; i++)
 		red[i] = 0;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_PAUSE);
+	delayMs(1);
 
 	// Play.
 	green[0] = 0b0110000;
@@ -474,6 +504,7 @@ void RobotLine::bitmapsSet() {
 	for (uint8_t i = 0; i < 8; i++)
 		red[i] = 0;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_PLAY);
+	delayMs(1);
 
 	// T-crossing approached by left side.
 	green[0] = 0b0100000;
@@ -487,6 +518,7 @@ void RobotLine::bitmapsSet() {
 	for (uint8_t i = 0; i < 8; i++)
 		red[i] = 0;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_T_CROSSING_BY_L);
+	delayMs(1);
 
 	// T-crossing approached by right side.
 	green[0] = 0b0000100;
@@ -500,6 +532,7 @@ void RobotLine::bitmapsSet() {
 	for (uint8_t i = 0; i < 8; i++)
 		red[i] = 0;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_T_CROSSING_BY_R);
+	delayMs(1);
 
 	// Wall ahead
 	green[0] = 0b11111111;
@@ -513,6 +546,7 @@ void RobotLine::bitmapsSet() {
 	for (uint8_t i = 0; i < 8; i++)
 		red[i] = 0;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_WALL_AHEAD);
+	delayMs(1);
 
 	// Wall on the left side
 	green[0] = 0b10001000;
@@ -526,6 +560,7 @@ void RobotLine::bitmapsSet() {
 	for (uint8_t i = 0; i < 8; i++)
 		red[i] = 0;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_WALL_L);
+	delayMs(1);
 
 	// Wall on the right side
 	green[0] = 0b00010001;
@@ -539,6 +574,7 @@ void RobotLine::bitmapsSet() {
 	for (uint8_t i = 0; i < 8; i++)
 		red[i] = 0;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_WALL_R);
+	delayMs(1);
 
 	// Define Your bitmaps here.
 		// Example
@@ -560,6 +596,7 @@ void RobotLine::bitmapsSet() {
 	red[6] = 0b00000011;
 	red[7] = 0b00000001;
 	mrm_8x8a->bitmapCustomStore(red, green, LED_CUSTOM);
+	delayMs(1);
 
 }
 
@@ -637,7 +674,7 @@ void RobotLine::display(uint8_t image) {
 }
 
 /** Display 8x8 text
-@image - image's number
+@text - text
 */
 void RobotLine::display(char* text) {
 	mrm_8x8a->text(text);
@@ -675,7 +712,7 @@ void RobotLine::evacuationZone() {
 }
 
 /** Front distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
-@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+@param sampleCount - Number or readings. 40% of the readings, with extreme values, will be discarded and the
 				rest will be averaged. Keeps returning 0 till all the sample is read.
 				If sampleCount is 0, it will not wait but will just return the last value.
 @param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
@@ -687,7 +724,7 @@ uint16_t RobotLine::front(uint8_t sampleCount, uint8_t sigmaCount) {
 }
 
 /** Front side - left distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
-@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+@param sampleCount - Number or readings. 40% of the readings, with extreme values, will be discarded and the
 				rest will be averaged. Keeps returning 0 till all the sample is read.
 				If sampleCount is 0, it will not wait but will just return the last value.
 @param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
@@ -698,8 +735,15 @@ uint16_t RobotLine::frontLeft(uint8_t sampleCount, uint8_t sigmaCount) {
 	return mrm_lid_can_b->distance(0, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
+/** Front side - left distance in cm, using ultrasonic sensor.
+@return - distance in cm
+*/
+uint16_t RobotLine::frontLeftUS() {
+	return mrm_us_b->reading(0); // Correct all sensors so that they return the same value for the same physical distance.
+}
+
 /** Front side - right distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
-@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+@param sampleCount - Number or readings. 40% of the readings, with extreme values, will be discarded and the
 				rest will be averaged. Keeps returning 0 till all the sample is read.
 				If sampleCount is 0, it will not wait but will just return the last value.
 @param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
@@ -751,7 +795,7 @@ void RobotLine::illumination(uint8_t current, uint8_t deviceNumber) {
 }
 
 /** Left side - rear sensor distance.
-@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+@param sampleCount - Number or readings. 40% of the readings, with extreme values, will be discarded and the
 				rest will be averaged. Keeps returning 0 till all the sample is read.
 				If sampleCount is 0, it will not wait but will just return the last value.
 @param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
@@ -763,7 +807,7 @@ uint16_t RobotLine::leftBack(uint8_t sampleCount, uint8_t sigmaCount) {
 }
 
 /** Left side - front sensor distance.
-@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+@param sampleCount - Number or readings. 40% of the readings, with extreme values, will be discarded and the
 				rest will be averaged. Keeps returning 0 till all the sample is read.
 				If sampleCount is 0, it will not wait but will just return the last value.
 @param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
@@ -888,56 +932,49 @@ void RobotLine::lineFollow() {
 	// }
 }
 
+int8_t direction;
+
 /** Custom test. The function will be called many times during the test, till You issue "x" menu command.
 */
 void RobotLine::loop() {
-	if ((line(0) || line(8)) && pitch() < -10)
-		go(70, 70);
-	else if (line(0) && line(8))
-		go(70, 70), delayMs(500);
-	else if (line(8))
-		go(-90, 90);
-	else if (line(0))
-		go(90, -90);
-	else if (line(1))
-		go(70, -20);
-	else if (line(2))
-		go(60, 10);
-	else if (line(3))
-		go(50, 20);
-	else if (line(5))
-		go(20, 50);
-	else if (line(6))
-		go(10, 60);
-	else if (line(7))
-		go(-20, 70);
-	else
-		go(70, 70);
+		if ((line(0) || line(8)) && pitch() < -10)
+			go(100, 100);
+		else if (line(0) && line(8))
+			go(100, 100), delayMs(50);
+		else if (line(8))
+			go(-70, 70);
+		else if (line(0))
+			go(70, -70);
+		else if (line(1))
+			go(70, -30);
+		else if (line(2))
+			go(60, 10);
+		else if (line(3))
+			go(60, 25);
+		else if (line(5))
+			go(25, 60);
+		else if (line(6))
+			go(10, 60);
+		else if (line(7))
+			go(-30, 70);
+		else if (line(4))
+			go(40, 40);
+		else
+			go(40, 40);
 }
 
 /** Generic actions, use them as templates
 */
-void RobotLine::loop0() { armClose(); end();}
+void RobotLine::loop0() { armIdle(); end();}
 void RobotLine::loop1() { armCatchReady(); end(); }
 void RobotLine::loop2() { armCatch(); end(); }
 void RobotLine::loop3() { armUp(); end(); }
 void RobotLine::loop4() { armDrop(); end(); }
 void RobotLine::loop5() { }
 void RobotLine::loop6() { }
-void RobotLine::loop7() {}
-void RobotLine::loop8() {}
-void RobotLine::loop9() {
-	armCatchReady();
-	delayMs(2000);
-	armCatch();
-	delayMs(2000);
-	armUp();
-	delayMs(2000);
-	armDrop();
-	delayMs(2000);
-	armClose();
-	delayMs(2000);
-}
+void RobotLine::loop7() { }
+void RobotLine::loop8() { }
+void RobotLine::loop9() { }
 
 /** Generic menu
 */
@@ -1105,20 +1142,20 @@ float RobotLine::pitch() {
 /** Starts the RCJ Line run after this action selected.
 */
 void RobotLine::rcjLine() {
-	lineFollow();
+	//lineFollow();
 	if (false)
 		if (front() < 100)
 			obstacleAvoid();
-	// mrm_8x8a->rotationSet(LED_8X8_BY_90_DEGREES); // Rotate the mrm-8x8a by 90� so that it can be read properly when standing behind the robot.
-	// bitmapsSet(); // Upload all the predefined bitmaps into the mrm-8x8a.
-	// display(LED_PLAY); // Show "play" sign.
-	// mrm_col_can->illumination(0xFF, 1); // Turn mrm-col-can's surface illumination on.
-	// armClose(); // Arm will go to its idle (up) position.
-	// actionSet(actionLineFollow); // The next action is line following.
+	mrm_8x8a->rotationSet(LED_8X8_BY_90_DEGREES); // Rotate the mrm-8x8a by 90� so that it can be read properly when standing behind the robot.
+	bitmapsSet(); // Upload all the predefined bitmaps into the mrm-8x8a.
+	display(LED_PLAY); // Show "play" sign.
+	mrm_col_can->illumination(0xFF, 1); // Turn mrm-col-can's surface illumination on.
+	//armClose(); // Arm will go to its idle (up) position.
+	actionSet(actionLineFollow); // The next action is line following.
 }
 
 /** Front distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
-@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+@param sampleCount - Number or readings. 40% of the readings, with extreme values, will be discarded and the
 				rest will be averaged. Keeps returning 0 till all the sample is read.
 				If sampleCount is 0, it will not wait but will just return the last value.
 @param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
@@ -1130,7 +1167,7 @@ uint16_t RobotLine::rightBack(uint8_t sampleCount, uint8_t sigmaCount) {
 }
 
 /** Front distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
-@param sampleCount - Number or readings. 40% of the raeadings, with extreme values, will be discarded and the
+@param sampleCount - Number or readings. 40% of the readings, with extreme values, will be discarded and the
 				rest will be averaged. Keeps returning 0 till all the sample is read.
 				If sampleCount is 0, it will not wait but will just return the last value.
 @param sigmaCount - Values outiside sigmaCount sigmas will be filtered out. 1 sigma will leave 68% of the values, 2 sigma 95%, 3 sigma 99.7%.
