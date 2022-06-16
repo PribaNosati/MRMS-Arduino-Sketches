@@ -937,30 +937,11 @@ int8_t direction;
 /** Custom test. The function will be called many times during the test, till You issue "x" menu command.
 */
 void RobotLine::loop() {
-		if ((line(0) || line(8)) && pitch() < -10)
-			go(100, 100);
-		else if (line(0) && line(8))
-			go(100, 100), delayMs(50);
-		else if (line(8))
-			go(-70, 70);
-		else if (line(0))
-			go(70, -70);
-		else if (line(1))
-			go(70, -30);
-		else if (line(2))
-			go(60, 10);
-		else if (line(3))
-			go(60, 25);
-		else if (line(5))
-			go(25, 60);
-		else if (line(6))
-			go(10, 60);
-		else if (line(7))
-			go(-30, 70);
-		else if (line(4))
-			go(40, 40);
-		else
-			go(40, 40);
+	if (serialDataCount() > 3){
+		print("Arrived\n\r");
+		print("Buffer[3]=%c\n\r", serialDataGet()[3]);
+		serialDataClear();
+	}
 }
 
 /** Generic actions, use them as templates

@@ -108,7 +108,8 @@ RobotSoccer::RobotSoccer(char name[]) : Robot(name) {
 	// Buttons
 	mrm_8x8a->actionSet(actionPlay, 0); // Button 1 starts the play
 	mrm_8x8a->actionSet(actionBounce, 1); // Button 2 starts user defined bounce() function
-	mrm_8x8a->actionSet(_actionLoop, 2); // Button 3 starts user defined loop() function
+	// mrm_8x8a->actionSet(_actionLoop, 2); // Button 3 starts user defined loop() function
+	mrm_8x8a->actionSet(actionCalibrate, 2);
 	mrm_8x8a->actionSet(_actionMenuMain, 3); // Button 4 stops the robot and prints main manu
 
 	// Set number of phototransistors in each line sensor.
@@ -376,9 +377,10 @@ bool RobotSoccer::line(uint8_t transistorNumber, uint8_t deviceNumber) {
 
 bool RobotSoccer::lineAny(){
 	const bool AVOID_LINE = false;
+	const bool ENABLE_FRONT_SENSOR = false;
 	if (AVOID_LINE)
-		for (uint8_t i = 0; i < 4; i++)
-			if (mrm_ref_can->any(false, i))
+		for (uint8_t i = (ENABLE_FRONT_SENSOR ? 0 : 1); i < 4; i++)
+			if (mrm_ref_can->any(false))
 				return true;
 	return false;
 }
