@@ -272,11 +272,6 @@ public:
 	 */
 	uint16_t green(uint8_t deviceNumber = 0){return mrm_col_can->colorGreen(deviceNumber);}
 
-	/**Compass
-	@return - North is 0�, clockwise are positive angles, values 0 - 360.
-	*/
-	float heading();
-
 	/** Color sensor's hue
 	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
 	@return - Hue
@@ -323,11 +318,6 @@ public:
 	*/
 	uint8_t patternColors(uint8_t deviceNumber = 0);
 
-	/**Pitch
-	@return - Pitch in degrees. Inclination forwards or backwards. Leveled robot shows 0�.
-	*/
-	float pitch();
-
 	/** Starts the RCJ Line run after this action selected.
 	*/
 	void rcjLine();
@@ -357,11 +347,6 @@ public:
 	@return - distance in mm
 	*/
 	uint16_t rightFront(uint8_t sampleCount = 0, uint8_t sigmaCount = 1);
-
-	/** Roll
-	@return - Roll in degrees. Inclination to the left or right. Values -90 - 90. Leveled robot shows 0�.
-	*/
-	float roll();
 
 	/** Color sensor's saturation
 	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.

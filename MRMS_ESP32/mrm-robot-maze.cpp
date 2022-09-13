@@ -1,4 +1,4 @@
-﻿#include <mrm-8x8a.h>
+#include <mrm-8x8a.h>
 #include <mrm-col-can.h>
 #include <mrm-imu.h>
 #include <mrm-lid-can-b.h>
@@ -217,6 +217,16 @@ void RobotMaze::directionDisplay(Direction direction){
 	}
 }
 
+
+/** Start motors
+@param leftSpeed, in range -127 to 127
+@param right Speed, in range -127 to 127
+@param speedLimit - Speed limit, 0 to 127. For example, 80 will limit all the speeds to 80/127%. 0 will turn the motors off.
+*/
+void RobotMaze::go(int16_t leftSpeed, int16_t rightSpeed) {
+	motorGroup->go(leftSpeed, rightSpeed);
+}
+
 /** Drives the robot ahead, maintaing a given compass bearing.
 */
 void RobotMaze::imuFollow() {
@@ -229,10 +239,30 @@ void RobotMaze::imuFollow() {
 /** Custom test. The function will be called many times during the test, till You issue "x" menu-command.
 */
 void RobotMaze::loop() {
-	motorGroup->go(90, 90);
-	delayMs(500);
-	motorGroup->go(-90, -90);
-	delayMs(500);
+
+	static int pocetniKut; 		// static - ne briše se kad se izađe iz funkcije.
+	static bool naprijed;
+	static uint8_t okreta;
+
+	if (setup()) {				// Znači da se naredba iza izvrši samo prvi put
+		pocetniKut = heading();	// Zapamti trenutni kut (heading()) u varijebalu "pocetniKut"
+		naprijed = true;
+		okreta = 1;
+	}
+	
+	if (naprijed){
+		go(40, 40);
+		delayMs(2000);
+		naprijed = false;
+	}
+	else{
+		go(30, -30);			// Pokrećemo lijeve motore brzinom 30 i desne -30 - robot se rotira udesno.
+		
+		if (fabs(remainderl(pocetniKut + okreta * 90 - heading(), 360)) < 5.0){ // Ako je razlika između ciljnog i trenutnog kuta manja od 5 stupnjeva...
+			naprijed = true;
+			okreta++;
+		}
+	}
 }
 
 /** Maps walls detected and other external readings in variables.
@@ -298,7 +328,7 @@ void RobotMaze::mazePrint() {
 			print(" ");
 			wallDisplay(wallGet(x, y, Direction::RIGHT), Direction::RIGHT);
 		}
-		print("\n\r"); // This completes verticall middle for this row. The next are bottom walls.
+		print("\n\r"); // This completes vertical middle for this row. The next are bottom walls.
 
 		// Bottom walls
 		print(y == minY ? "└" : "├");
@@ -508,6 +538,14 @@ void RobotMaze::rescueMaze() {
 	delayMs(200); // Debounce switch - the switch is turned on repeatedly due to its inductance. Skip that time in a crude manner - just wait.
 }
 
+
+/** Stop the robot
+*/
+void RobotMaze::stop() {
+	motorGroup->stop();
+}
+
+
 /** Traverses all the chain till a tile with (x,y) is found.
 @param x - x coordinate.
 @param y - y coordinata.
@@ -524,7 +562,7 @@ Tile* RobotMaze::tileContaining(int8_t x, int8_t y) {
 @return - direction from maze's perspective.
 */
 Direction RobotMaze:: wallClosest() {
-	Direction closest = NOWHERE; // If no wall find, this will be the result.
+	Direction closest = NOWHERE; // If no wall found, this will be the result.
 	uint16_t leastDistance = 0xFFFF; // Set variable to a huge number so that any distance reading will override it.
 	for (uint8_t i = 0; i < 4; i++) { // Iterate all the 4 directions.
 		Direction dir = (Direction)i; // Cast integer to Direction.
@@ -534,7 +572,7 @@ Direction RobotMaze:: wallClosest() {
 		if (d0 < NO_WALL_DISTANCE && d1 < NO_WALL_DISTANCE && abs(d0 - d1) < WALL_FOLLOW_ERROR_ALLOWED) {
 			if (d0 < d1) // Find the smaller of 2 values.
 				d0 = d1;
-			if (d0 < leastDistance) { // If it small enought, change the running minimum.
+			if (d0 < leastDistance) { // If it small enough, change the running minimum.
 				leastDistance = d0;
 				closest = dir; // Remember the direction of the new minimum.
 			}
@@ -634,6 +672,7 @@ void RobotMaze::wallDisplay(WallStatus wallStatus, Direction direction) {
 void RobotMaze::wallsDisplay() {
 	/* Contrary to the method used mostly here, this bitmap is not stored beforehand. There are too many combinations and that will not be feasible.
 	So, it will be built on-line.*/
+
 	// Clear red and green dots.
 	uint8_t red[8];
 	uint8_t green[8];

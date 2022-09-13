@@ -771,13 +771,6 @@ void RobotLine::goAhead() {
 	end(); // This command will cancel actions and the robot will return in the default idle loop, after displaying menu.
 }
 
-/**Compass
-@return - North is 0�, clockwise are positive angles, values 0 - 360.
-*/
-float RobotLine::heading() {
-	return mrm_imu->heading();
-}
-
 /** Color sensor's hue
 @param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
 @return - Hue
@@ -1113,12 +1106,6 @@ uint8_t RobotLine::patternColors(uint8_t deviceNumber) {
 	return mrm_col_can->patternRecognizedBy6Colors(deviceNumber);
 }
 
-/**Pitch
-@return - Pitch in degrees. Inclination forwards or backwards. Leveled robot shows 0�.
-*/
-float RobotLine::pitch() {
-	return mrm_imu->pitch();
-}
 
 /** Starts the RCJ Line run after this action selected.
 */
@@ -1159,12 +1146,6 @@ uint16_t RobotLine::rightFront(uint8_t sampleCount, uint8_t sigmaCount) {
 	return mrm_lid_can_b->distance(2); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
-/** Roll
-@return - Roll in degrees. Inclination to the left or right. Values -90 - 90. Leveled robot shows 0�.
-*/
-float RobotLine::roll() {
-	return mrm_imu->roll();
-}
 
 /** Color sensor's saturation
 @param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.

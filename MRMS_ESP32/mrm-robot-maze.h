@@ -16,7 +16,7 @@ class Tile {
 	uint8_t _wall; // 1 byte stores statuses for all 2 walls enclosing the tile. Bit 7:6 - right, 5:4 - down, 3:2 - left, 1:0 - up.
 	uint8_t _surface; // 1 byte stores surface and other data. Bit 7:6 - surface. The rest 6 bytes can be freely used. This feature is not in use yet.
 	Tile* _chain; // Pointer to the next tile in chain.
-
+	
 public:
 	static Tile* first; // Static member variable (one instance for the whole class), pointing to the first tile of the chain.
 
@@ -130,6 +130,13 @@ public:
 	*/
 	void directionDisplay(Direction direction);
 
+	/** Start motors
+	@param leftSpeed, in range -127 to 127
+	@param right Speed, in range -127 to 127
+	@param speedLimit - Speed limit, 0 to 127. For example, 80 will limit all the speeds to 80/127%. 0 will turn the motors off.
+	*/
+	void go(int16_t leftSpeed, int16_t rightSpeed);
+
 	/** Orders the robot to go ahead. Overriden virtual function. Not used here.
 	*/
 	void goAhead() {}
@@ -189,6 +196,10 @@ public:
 	@return direction from maze's perspective.
 	*/
 	Direction rToM(Direction directionAsSeenByRobot) { return (Direction)(directionCurrent + directionAsSeenByRobot % 4); }
+
+	/** Stop the robot
+	*/
+	void stop();
 
 	/** Traverses all the chain till a tile with (x,y) is found.
 	@param x - x coordinate.

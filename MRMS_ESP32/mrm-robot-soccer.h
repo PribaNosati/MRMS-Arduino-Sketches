@@ -175,10 +175,6 @@ public:
 	*/
 	void play();
 
-	/**Pitch
-	@return - Pitch in degrees. Inclination forwards or backwards. Leveled robot shows 0�.
-	*/
-	float pitch();
 
 	/** Right distance to wall
 	@param sampleCount - Number or readings. 40% of the readings, with extreme values, will be discarded and the
@@ -190,10 +186,6 @@ public:
 	*/
 	uint16_t right(uint8_t sampleCount = 0, uint8_t sigmaCount = 1);
 
-	/** Roll
-	@return - Roll in degrees. Inclination to the left or right. Values -90 - 90. Leveled robot shows 0�.
-	*/
-	float roll();
 
 	/** Display fixed sign stored in sensor
 	@image - sign's number

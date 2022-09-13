@@ -1,4 +1,4 @@
-﻿#include <mrm-8x8a.h>
+#include <mrm-8x8a.h>
 #include <mrm-bldc4x2.5.h>
 #include <mrm-col-can.h>
 #include <mrm-imu.h>

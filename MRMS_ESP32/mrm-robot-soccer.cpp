@@ -448,11 +448,38 @@ int8_t speedY;
 /** Custom test.
 */
 void RobotSoccer::loop() {
-	print("Start\n\r");
-	headingToMaintain = mrm_imu->heading();
-	speedX = 0;
-	speedY = 0;
-	end();
+	static uint32_t lastMs;
+
+	if (setup()){
+		uint8_t red[8];
+		uint8_t green[8];
+		
+		for (uint8_t i = 0; i < 8; i++)
+			red[i] = 0, green[i] = 0;
+
+		mrm_8x8a->bitmapCustomStore(red, green, 0);
+		
+		green[0] = 0b00000000;
+		green[1] = 0b00000000;
+		green[2] = 0b00011000;
+		green[3] = 0b00111100;
+		green[4] = 0b00111100;
+		green[5] = 0b00011000;
+		green[6] = 0b00000000;
+		green[7] = 0b00000000;
+
+		mrm_8x8a->bitmapCustomStore(red, green, 1);
+
+		lastMs = 0;
+	}
+
+	if (barrier())
+		lastMs = millis();
+
+	if (millis() - lastMs < 500)
+		mrm_8x8a->bitmapCustomStoredDisplay(1);
+	else
+		mrm_8x8a->bitmapCustomStoredDisplay(0);
 }
 
 /** Generic actions, use them as templates
@@ -495,13 +522,6 @@ void RobotSoccer::play() {
 	//actionSet(actionBounce);
 }
 
-/**Pitch
-@return - Pitch in degrees. Inclination forwards or backwards. Leveled robot shows 0�.
-*/
-float RobotSoccer::pitch() {
-	return mrm_imu->pitch();
-}
-
 /** Right distance to wall
 @param sampleCount - Number or readings. 40% of the readings, with extreme values, will be discarded and the
 				rest will be averaged. Keeps returning 0 till all the sample is read.
@@ -514,12 +534,6 @@ uint16_t RobotSoccer::right(uint8_t sampleCount, uint8_t sigmaCount) {
 	return mrm_lid_can_b2->distance(1, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
-/** Roll
-@return - Roll in degrees. Inclination to the left or right. Values -90 - 90. Leveled robot shows 0�.
-*/
-float RobotSoccer::roll() {
-	return mrm_imu->roll();
-}
 
 /** Display fixed sign stored in sensor
 @image - sign's number
