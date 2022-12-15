@@ -23,7 +23,6 @@
 #include <mrm-robot.h>
 #include "mrm-robot-line.h"
 #include "mrm-robot-maze.h"
-#include "mrm-robot-maze-competition.h"
 #include "mrm-robot-min.h"
 #include "mrm-robot-soccer.h"
 #include <mrm-servo.h>
