@@ -10,6 +10,10 @@
 
 Tile* Tile::first; // Neccessary for static member variable.
 
+// Declarations in advance needed, declarations later
+void encoder1Increase();
+void encoder2Increase();
+
 /** Constructor
 @param name - it is also used for Bluetooth so a Bluetooth client (like a phone) will list the device using this name.
 */
@@ -18,14 +22,14 @@ RobotMaze::RobotMaze(char name[]) : Robot(name) {
 	// 2nd, 4th, 6th, and 8th parameters are output connectors of the controller (number 0 - 3, meaning 1. - 4. connector). 
 	// 2nd one must be connected to LB (Left-Back) motor, 4th to LF (Left-Front), 6th to RF (Right-Front), and 8th to RB (Right-Back). 
 	// Therefore, You can connect motors freely, but have to adjust the parameters here. In this example output (connector) 0 is LB, etc.
-	motorGroup = new MotorGroupDifferential(this, mrm_mot4x3_6can, 0, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 3);
+	motorGroup = new MotorGroupDifferential(this, mrm_mot4x3_6can, 0, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 3);
 
 	// Depending on your wiring, it may be necessary to spin some motors in the other direction. In this example, no change needed,
 	// but uncommenting the following line will change the direction of the motor 2.
-	mrm_mot4x3_6can->directionChange(0); // Uncomment to change 1st wheel's rotation direction
+	// mrm_mot4x3_6can->directionChange(0); // Uncomment to change 1st wheel's rotation direction
 	mrm_mot4x3_6can->directionChange(1); // Uncomment to change 2nd wheel's rotation direction
 	mrm_mot4x3_6can->directionChange(2); // Uncomment to change 3rd wheel's rotation direction
-	mrm_mot4x3_6can->directionChange(3); // Uncomment to change 4th wheel's rotation direction
+	// mrm_mot4x3_6can->directionChange(3); // Uncomment to change 4th wheel's rotation direction
 
 	// All the actions will be defined here; the objects will be created.
 	actionDecide = new ActionDecide(this);
@@ -54,7 +58,18 @@ RobotMaze::RobotMaze(char name[]) : Robot(name) {
 
 	// Upload custom bitmaps into mrm-8x8a.
 	bitmapsSet();
+
+	// Attach interrupts for encoder motors
+	#if ENCODERS_MAZE
+	pinMode(LEFT_ENCODER_PIN, INPUT);
+	attachInterrupt(LEFT_ENCODER_PIN, encoder1Increase, RISING);
+	pinMode(RIGHT_ENCODER_PIN, INPUT);
+	attachInterrupt(RIGHT_ENCODER_PIN, encoder2Increase, RISING);
+	#endif
 }
+
+uint32_t encoder1Count = 0; // Cannot be members since interrupt accpets only pointer to a global function
+uint32_t encoder2Count = 0;
 
 /** Store custom bitmaps in mrm-led8x8a.
 */
@@ -218,13 +233,45 @@ void RobotMaze::directionDisplay(Direction direction){
 }
 
 
+/** Increase encoder count
+*/
+void encoder1Increase(){
+	encoder1Count++;
+}
+
+/** Reset encoder count
+*/
+void encoder1Reset(){
+	encoder1Count = 0;
+}
+
+/** Increase encoder count
+*/
+void encoder2Increase(){
+	encoder2Count++;
+}
+
+/** Reset encoder count
+*/
+void encoder2Reset(){
+	encoder2Count = 0;
+}
+
 /** Start motors
 @param leftSpeed, in range -127 to 127
 @param right Speed, in range -127 to 127
 @param speedLimit - Speed limit, 0 to 127. For example, 80 will limit all the speeds to 80/127%. 0 will turn the motors off.
 */
-void RobotMaze::go(int16_t leftSpeed, int16_t rightSpeed) {
-	motorGroup->go(leftSpeed, rightSpeed);
+void RobotMaze::go(int16_t leftSpeed, int16_t rightSpeed, int16_t lateralSpeedToRight) {
+	motorGroup->go(leftSpeed, rightSpeed, lateralSpeedToRight);
+}
+
+/** Test - go straight ahead using a defined speed.
+*/
+void RobotMaze::goAhead() {
+	const uint8_t speed = 40;
+	go(speed, speed);
+	end(); // This command will cancel actions and the robot will return in the default idle loop, after displaying menu.
 }
 
 /** Drives the robot ahead, maintaing a given compass bearing.
@@ -236,33 +283,18 @@ void RobotMaze::imuFollow() {
 	motorGroup->go(errorCW > 0 ? slowerMotor : TOP_SPEED, errorCW < 0 ? TOP_SPEED : slowerMotor); // Drive the robot.
 }
 
+/** Line sensor
+@param transistorNumber - starts from 0 and end value depends on sensor. Usually 7 (for mrm-ref-can8) or 8 (for mrm-ref-can9).
+@return - true if black line found
+*/
+bool RobotMaze::line(uint8_t transistorNumber) {
+	return mrm_ref_can->dark(transistorNumber);
+}
+
 /** Custom test. The function will be called many times during the test, till You issue "x" menu-command.
 */
 void RobotMaze::loop() {
-
-	static int pocetniKut; 		// static - ne briše se kad se izađe iz funkcije.
-	static bool naprijed;
-	static uint8_t okreta;
-
-	if (setup()) {				// Znači da se naredba iza izvrši samo prvi put
-		pocetniKut = heading();	// Zapamti trenutni kut (heading()) u varijebalu "pocetniKut"
-		naprijed = true;
-		okreta = 1;
-	}
-	
-	if (naprijed){
-		go(40, 40);
-		delayMs(2000);
-		naprijed = false;
-	}
-	else{
-		go(30, -30);			// Pokrećemo lijeve motore brzinom 30 i desne -30 - robot se rotira udesno.
-		
-		if (fabs(remainderl(pocetniKut + okreta * 90 - heading(), 360)) < 5.0){ // Ako je razlika između ciljnog i trenutnog kuta manja od 5 stupnjeva...
-			naprijed = true;
-			okreta++;
-		}
-	}
+	go(30, -30);
 }
 
 /** Maps walls detected and other external readings in variables.

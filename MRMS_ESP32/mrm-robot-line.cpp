@@ -4,6 +4,7 @@
 #include <mrm-imu.h>
 #include <mrm-lid-can-b.h>
 #include <mrm-lid-can-b2.h>
+#include <mrm-lid-d.h>
 #include <mrm-mot4x3.6can.h>
 #include <mrm-mot4x10.h>
 #include "mrm-robot-line.h"
@@ -19,7 +20,7 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 	// 2nd, 4th, 6th, and 8th parameters are output connectors of the controller (number 0 - 3, meaning 1. - 4. connector). 
 	// 2nd one must be connected to LB (Left-Back) motor, 4th to LF (Left-Front), 6th to RF (Right-Front), and 8th to RB (Right-Back). 
 	// Therefore, You can connect motors freely, but have to adjust the parameters here. In this example output (connector) 0 is LB, etc.
-	motorGroup = new MotorGroupDifferential(this, mrm_mot4x3_6can, 0, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 3);
+	motorGroup = new MotorGroupDifferential(this, mrm_mot4x3_6can, 0, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 3);
 
 	// All the actions will be defined here; the objects will be created.
 	actionEvacuationZone = new ActionEvacuationZone(this);
@@ -925,16 +926,29 @@ void RobotLine::lineFollow() {
 	// }
 }
 
-int8_t direction;
+#include <SPI.h>
 
 /** Custom test. The function will be called many times during the test, till You issue "x" menu command.
 */
 void RobotLine::loop() {
-	if (serialDataCount() > 3){
-		print("Arrived\n\r");
-		print("Buffer[3]=%c\n\r", serialDataGet()[3]);
-		serialDataClear();
-	}
+	if (line(8))
+		go(-90, 90);
+	else if (line(0))
+		go(90, -90);
+	else if (line(1))
+		go(70, -20);
+	else if (line(2))
+		go(60, 10);
+	else if (line(3))
+		go(50, 20);
+	else if (line(5))
+		go(20, 50);
+	else if (line(6))
+		go(10, 60);
+	else if (line(7))
+		go(-20, 70);
+	else
+		go(70, 70);
 }
 
 /** Generic actions, use them as templates
@@ -944,7 +958,7 @@ void RobotLine::loop1() { armCatchReady(); end(); }
 void RobotLine::loop2() { armCatch(); end(); }
 void RobotLine::loop3() { armUp(); end(); }
 void RobotLine::loop4() { armDrop(); end(); }
-void RobotLine::loop5() { }
+void RobotLine::loop5() {	mrm_lid_d->resolutionSet(0, 16); }
 void RobotLine::loop6() { }
 void RobotLine::loop7() { }
 void RobotLine::loop8() { }

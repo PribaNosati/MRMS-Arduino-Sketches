@@ -2,6 +2,8 @@
 #include <mrm-action.h>
 #include <mrm-robot.h>
 
+#define ENCODERS_MAZE false
+
 enum Direction{UP, LEFT, DOWN, RIGHT, NOWHERE};
 enum LedSign { MAZE_IMU_FOLLOW, MAZE_LED_PAUSE, MAZE_LED_PLAY, MAZE_OBSTACLE_L, MAZE_OBSTACLE_R, MAZE_WALL_DOWN_FOLLOW, 
 	MAZE_WALL_LEFT_FOLLOW, MAZE_WALL_RIGHT_FOLLOW, MAZE_WALL_UP_FOLLOW }; // For mrm-8x8 display.
@@ -74,6 +76,8 @@ class RobotMaze : public Robot {
 	const uint16_t WALL_FOLLOW_ERROR_ALLOWED = 40; // In mm. If 2 sensors measure distances that diverge in values more than this number, the robot will not follow that wall.
 	const uint16_t WALL_FOLLOW_DISTANCE_ADJUSTMENT_STRENGTH = 1.1; // A bigger value will force the robot to correct distance to a wall more vigorously.
 	const uint16_t WALL_FOLLOW_ROTATION_STRENGTH = 1.1; // A bigger value will force the robot to correct its alignment to a wall more vigorously.
+	const uint8_t LEFT_ENCODER_PIN = 16;
+	const uint8_t RIGHT_ENCODER_PIN = 17;
 
 	// Actions' declarations
 	ActionDecide* actionDecide;
@@ -135,15 +139,21 @@ public:
 	@param right Speed, in range -127 to 127
 	@param speedLimit - Speed limit, 0 to 127. For example, 80 will limit all the speeds to 80/127%. 0 will turn the motors off.
 	*/
-	void go(int16_t leftSpeed, int16_t rightSpeed);
+	void go(int16_t leftSpeed, int16_t rightSpeed, int16_t lateralSpeedToRight = 0);
 
 	/** Orders the robot to go ahead. Overriden virtual function. Not used here.
 	*/
-	void goAhead() {}
+	void goAhead();
 
 	/** Drives the robot ahead, maintaing a given compass bearing.
 	*/
 	void imuFollow();
+
+	/** Line sensor
+	@param transistorNumber - starts from 0 and end value depends on sensor. Usually 7 (for mrm-ref-can8) or 8 (for mrm-ref-can9).
+	@return - true if black line found
+	*/
+	bool line(uint8_t transistorNumber);
 
 	/** Custom test
 	*/

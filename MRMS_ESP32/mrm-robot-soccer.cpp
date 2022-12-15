@@ -108,8 +108,8 @@ RobotSoccer::RobotSoccer(char name[]) : Robot(name) {
 	// Buttons
 	mrm_8x8a->actionSet(actionPlay, 0); // Button 1 starts the play
 	mrm_8x8a->actionSet(actionBounce, 1); // Button 2 starts user defined bounce() function
-	// mrm_8x8a->actionSet(_actionLoop, 2); // Button 3 starts user defined loop() function
-	mrm_8x8a->actionSet(actionCalibrate, 2);
+	mrm_8x8a->actionSet(_actionLoop, 2); // Button 3 starts user defined loop() function
+	// mrm_8x8a->actionSet(actionCalibrate, 2);
 	mrm_8x8a->actionSet(_actionMenuMain, 3); // Button 4 stops the robot and prints main manu
 
 	// Set number of phototransistors in each line sensor.
@@ -448,38 +448,10 @@ int8_t speedY;
 /** Custom test.
 */
 void RobotSoccer::loop() {
-	static uint32_t lastMs;
-
-	if (setup()){
-		uint8_t red[8];
-		uint8_t green[8];
-		
-		for (uint8_t i = 0; i < 8; i++)
-			red[i] = 0, green[i] = 0;
-
-		mrm_8x8a->bitmapCustomStore(red, green, 0);
-		
-		green[0] = 0b00000000;
-		green[1] = 0b00000000;
-		green[2] = 0b00011000;
-		green[3] = 0b00111100;
-		green[4] = 0b00111100;
-		green[5] = 0b00011000;
-		green[6] = 0b00000000;
-		green[7] = 0b00000000;
-
-		mrm_8x8a->bitmapCustomStore(red, green, 1);
-
-		lastMs = 0;
-	}
-
-	if (barrier())
-		lastMs = millis();
-
-	if (millis() - lastMs < 500)
-		mrm_8x8a->bitmapCustomStoredDisplay(1);
+	if (left() < right())
+		go(50, 0, 20);
 	else
-		mrm_8x8a->bitmapCustomStoredDisplay(0);
+		go(50, 0, -20);
 }
 
 /** Generic actions, use them as templates
