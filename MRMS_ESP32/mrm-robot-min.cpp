@@ -10,9 +10,18 @@
 #include "mrm-robot-min.h"
 #include <mrm-servo.h>
 #include <mrm-therm-b-can.h>
+#include <EEPROM.h>
 
 class ActionMotorShortTest;
 
+#define AUTOSTART 0
+#define DEVICE_COUNT_COLOR 0
+#define DEVICE_COUNT_LED 1
+#define DEVICE_COUNT_IR_FINDER 1
+#define DEVICE_COUNT_LIDARS 4
+#define DEVICE_COUNT_MOTORS 4
+#define DEVICE_COUNT_REFLECTIVE 4
+#define START_MOTORS 0
 /** Constructor
 @param name - it is also used for Bluetooth so a Bluetooth client (like a phone) will list the device using this name.
 */
@@ -21,8 +30,8 @@ RobotMin::RobotMin(char name[]) : Robot(name) {
 	// 2nd, 4th, 6th, and 8th parameters are output connectors of the controller (0 - 3, meaning 1 - 4. connector). 2nd one must be connected to LB (Left-Back) motor,
 	// 4th to LF (Left-Front), 6th to RF (Right-Front), and 8th to RB (Right-Back). Therefore, You can connect motors freely, but have to
 	// adjust the parameters here. In this example output (connector) 3 is LB, etc.
-	//motorGroup = new MotorGroupDifferential(this, mrm_mot4x3_6can, 3, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 0);
-	motorGroup = new MotorGroupDifferential(this, mrm_bldc4x2_5, 3, mrm_bldc4x2_5, 1, mrm_bldc4x2_5, 2, mrm_bldc4x2_5, 0);
+	motorGroup = new MotorGroupDifferential(this, mrm_mot4x3_6can, 3, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 0);
+	// motorGroup = new MotorGroupDifferential(this, mrm_bldc4x2_5, 3, mrm_bldc4x2_5, 1, mrm_bldc4x2_5, 2, mrm_bldc4x2_5, 0);
 
 	// Depending on your wiring, it may be necessary to spin some motors in the other direction. In this example, no change needed,
 	// but uncommenting the following line will change the direction of the motor 2.
@@ -36,15 +45,22 @@ RobotMin::RobotMin(char name[]) : Robot(name) {
 	// called in the code, but only through menus. For example, ActionWallsTest test is only manu-based, and it is all right.
 	// This test is not supposed to be called in code.
 
-
 	// Set buttons' actions
-	//mrm_8x8a->actionSet(_actionCANBusStress, 1); // Starts stress test.
+	mrm_8x8a->actionSet(_actionLoop0, 1); // Starts stress test.
 	mrm_8x8a->actionSet(_actionLoop, 2); // Free-defined action.
 	mrm_8x8a->actionSet(_actionMenuMain, 3); // Stop and display menu
 	// Put Your buttons' actions here.
 
 	// Upload custom bitmaps into mrm-8x8a.
 	bitmapsSet();
+
+	delayMs(500); // For CAN Bus boot
+
+#if AUTOSTART
+	_actionCurrent = _actionLoop0; // Comment the line if no default action
+#endif
+	pinMode(26, OUTPUT);
+	digitalWrite(26, LOW);
 }
 
 /** Custom test. The function will be called many times during the test, till You issue "x" menu-command.
@@ -52,9 +68,10 @@ RobotMin::RobotMin(char name[]) : Robot(name) {
 void RobotMin::loop() {
 	#define LIST_ALL 0
 	#define TEST1 0
-	#define TEST2 1
+	#define TEST2 0
 	#define TEST3 0
 	#define TEST4 0
+	#define TEST5 1
 
 	#if LIST_ALL
 	uint8_t cnt = 0;
@@ -279,7 +296,152 @@ void RobotMin::loop() {
 	#endif
 
 	#if TEST4
-		mrm_8x8a->devicesScan(false, 0b0000000000000001);
-		delayMs(1);
+		EEPROM.begin(12);
+		uint8_t address = 0;
+		EEPROM.write(address, 0xFF);
+		address++;
+		EEPROM.write(address, 17);
+		EEPROM.commit(); // Warning: only 100000 times writeable
+
+		address = 0;
+		uint8_t content = EEPROM.read(address);
+		address++;
+		uint8_t content1 = EEPROM.read(address);
+		print("Content: %i %i\n\r", (int)content, (int)content1);
+		if (content == 0xFF){
+			mrm_8x8a->text("Last failed");
+			print("Last failed");
+			EEPROM.begin(12);
+			EEPROM.write(0, 0);
+			EEPROM.commit(); // Warning: only 100000 times writeable
+			for(;;);
+		}
+		else
+			print("Nothing");
+		end();
 	#endif
+
+	#if TEST5
+		static const uint8_t PINS_COUNT = 7;
+		static uint8_t pins[] = {12, 13, 14, 16, 25, 32, 33};
+		if (setup()){
+			print("Test master\n\r");
+			for (uint8_t i = 0; i < PINS_COUNT; i++)
+				pinMode(pins[i], OUTPUT);
+			pinMode(27, INPUT_PULLDOWN);
+		}
+		print("On\n\r");
+		for (uint8_t i = 0; i < PINS_COUNT; i++){
+			digitalWrite(pins[i], HIGH);
+			delayMs(100);
+		}
+		delayMs(50000);
+		if (digitalRead(27)){
+			mrm_8x8a->text((char*)"Break");
+			print("End.");
+			end();
+		}
+		else{
+			print("Off\n\r");
+			for (uint8_t i = 0; i < PINS_COUNT; i++){
+				digitalWrite(pins[i], LOW);
+				delayMs(100);
+			}
+			delayMs(3000);
+		}
+	#endif
+}
+
+#define EEPROM_SIZE 12
+
+void RobotMin::loop0(){
+	static uint32_t i = 0;
+	bool ok = true;
+	if (setup()){
+		pinMode(26, OUTPUT);
+		print("Started - devices test.\n\r");
+		uint8_t address = 0;
+		uint8_t count;
+		if (EEPROM.read(address) == 0xFF){
+			mrm_8x8a->text("Last failed");
+			print("Last failed");
+			end();
+			ok = false;
+		}
+	}
+	if (ok){
+		uint8_t count = devicesScan(true);
+		actionSet(_actionLoop0);
+		if (count == DEVICE_COUNT_LED + DEVICE_COUNT_LIDARS + DEVICE_COUNT_MOTORS + 
+			DEVICE_COUNT_REFLECTIVE + DEVICE_COUNT_COLOR + DEVICE_COUNT_IR_FINDER){
+			print("Pass %i OK\n\r", ++i);
+			#if START_MOTORS
+			int8_t leftSpeed = millis() % 255 - 128;
+			int8_t rightSpeed = millis() % 255 - 128;
+			motorGroup->go(leftSpeed, rightSpeed);
+			#endif
+		}
+		else{
+			bool ref = mrm_ref_can->alive(0);
+			bool lid0 = mrm_lid_can_b->alive(0);
+			bool lid1 = mrm_lid_can_b->alive(1);
+			bool lid2 = mrm_lid_can_b->alive(2);
+			bool mot0 = mrm_mot4x3_6can->alive(0);
+			char buffer[40];
+			sprintf(buffer, "%i dev, %s%s%s%s%s", count, ref ? "" : "R", lid0 ? "" : "L0", 
+				lid1 ? "" : "L1", lid2 ? "" : "L2", mot0 ? "" : "M0");
+			mrm_8x8a->text(buffer);
+			print("%i devices, stop\n\r", count);
+			digitalWrite(26, HIGH);
+#if AUTOSTART
+			EEPROM.begin(EEPROM_SIZE);
+			uint8_t address = 0;
+			EEPROM.write(address, 0xFF);
+			address++;
+			EEPROM.write(address, count);
+			EEPROM.commit(); // Warning: only 100000 times writeable
+			for(;;);
+#else
+			end();
+#endif
+		}
+	}
+}
+
+void RobotMin::loop1(){
+			EEPROM.begin(12);
+			EEPROM.write(0, 0);
+			EEPROM.commit(); // Warning: only 100000 times writeable
+}
+
+void RobotMin::loop2(){
+	while (millis() < 3000) //Wait for all the devices to complete start-up
+		delayMs(50);
+		// print("AA1\n\r");
+	devicesStop();
+
+	delayMs(5); // Read all the messages sent after stop.
+
+	// Set not alive
+print("Board: %s\n\r", board[14]->name());
+			board[14]->aliveSet(false); // Mark as not alive. It will be marked as alive when returned message arrives.
+
+	// Send alive ping
+	for (uint8_t k = 0; k < 2; k++)
+				board[14]->devicesScan(verbose);
+				// print("SC1 %s ", board[i]->name()),count += board[i]->devicesScan(verbose), print("SC2");
+
+
+	// Count alive
+	uint8_t count = 0;
+			count += board[14]->aliveCount(); 
+
+
+		print("%i devices.\n\r", count);
+
+	if (count == 0){
+		print("No ref\n\r");
+		_devicesScanBeforeMenuAndSwitches = false;
+		end();
+	}
 }

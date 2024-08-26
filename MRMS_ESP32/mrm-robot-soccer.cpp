@@ -18,11 +18,11 @@ RobotSoccer::RobotSoccer(char name[]) : Robot(name) {
 	// LED signs to be assigned to different actions follow. It is easier to follow action flow by checking the display.
 
 	// LED Calibrate
-	LEDSignText* signCalibrate = new LEDSignText(); // Here, a text will be displayed instead of a 8x8 bitmap.
+	Mrm_8x8a::LEDSignText* signCalibrate = new Mrm_8x8a::LEDSignText(); // Here, a text will be displayed instead of a 8x8 bitmap.
 	strcpy(signCalibrate->text, "Calibr.");
 
 	// LED approach opponent's goal
-	LEDSignBitmap* signGoalApproach = new LEDSignBitmap();
+	Mrm_8x8a::LEDSignBitmap* signGoalApproach = new Mrm_8x8a::LEDSignBitmap();
 	// Each "1" will turn on a single LED.
 	signGoalApproach->green[0] = 0b01111110;
 	signGoalApproach->green[1] = 0b01000010;
@@ -34,7 +34,7 @@ RobotSoccer::RobotSoccer(char name[]) : Robot(name) {
 	signGoalApproach->green[7] = 0b00000000;
 
 	// LED 8x8 idle
-	LEDSignBitmap* signIdle = new LEDSignBitmap();
+	Mrm_8x8a::LEDSignBitmap* signIdle = new Mrm_8x8a::LEDSignBitmap();
 	// Each "1" will turn on a single LED.
 	signIdle->green[0] = 0b00000000;
 	signIdle->green[1] = 0b00000000;
@@ -46,7 +46,7 @@ RobotSoccer::RobotSoccer(char name[]) : Robot(name) {
 	signIdle->green[7] = 0b01111110;
 
 	// LED 8x8 line avoid
-	LEDSignBitmap* signLineAvoid = new LEDSignBitmap();
+	Mrm_8x8a::LEDSignBitmap* signLineAvoid = new Mrm_8x8a::LEDSignBitmap();
 	signLineAvoid->green[0] = 0b11111111;
 	signLineAvoid->green[1] = 0b10000001;
 	signLineAvoid->green[2] = 0b10000001;
@@ -57,7 +57,7 @@ RobotSoccer::RobotSoccer(char name[]) : Robot(name) {
 	signLineAvoid->green[7] = 0b11111111;
 
 	// LED 8x8 catch
-	LEDSignBitmap* signCatch = new LEDSignBitmap();
+	Mrm_8x8a::LEDSignBitmap* signCatch = new Mrm_8x8a::LEDSignBitmap();
 	signCatch->green[0] = 0b00011000;
 	signCatch->green[1] = 0b00011000;
 	signCatch->green[2] = 0b00000000;
@@ -68,7 +68,7 @@ RobotSoccer::RobotSoccer(char name[]) : Robot(name) {
 	signCatch->green[7] = 0b00011000;
 
 	// LED Bounce
-	LEDSignText* signBounce = new LEDSignText(); // Here, a text will be displayed instead of a 8x8 bitmap.
+	Mrm_8x8a::LEDSignText* signBounce = new Mrm_8x8a::LEDSignText(); // Here, a text will be displayed instead of a 8x8 bitmap.
 	strcpy(signBounce->text, "Bounce");
 
 	// Actions
@@ -448,10 +448,10 @@ int8_t speedY;
 /** Custom test.
 */
 void RobotSoccer::loop() {
-	if (left() < right())
-		go(50, 0, 20);
-	else
-		go(50, 0, -20);
+	if (serialDataCount() > 10 ){
+		print("Data: %s\n\r", uartRxCommandCumulative);
+		serialDataClear();
+	}
 }
 
 /** Generic actions, use them as templates

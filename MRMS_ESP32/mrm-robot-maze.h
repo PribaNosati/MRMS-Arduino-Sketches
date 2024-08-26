@@ -61,7 +61,6 @@ class ActionMove;
 class ActionMoveAhead;
 class ActionMoveTurn;
 class ActionRescueMaze;
-class ActionWallsTest;
 
 /** Robot for RCJ Rescue Maze, a class derived from the base Robot class.
 */
@@ -87,8 +86,6 @@ class RobotMaze : public Robot {
 	ActionMoveAhead* actionMoveAhead;
 	ActionMoveTurn* actionMoveTurn;
 	ActionRescueMaze* actionRescueMaze;
-	ActionStop* actionStop;
-	ActionWallsTest* actionWallsTest;
 
 	Direction directionCurrent; // Current robot's direction.
 
@@ -127,7 +124,7 @@ public:
 		For example FL is first CCW and FR is not.
 	@return - distance in mm.
 	*/
-	uint16_t distance(Direction direction, bool firstCCW) {return mrm_lid_can_b->reading(0, 2 * mToR(direction) + firstCCW); }
+	uint16_t distance(Direction direction, bool firstCCW);
 
 	/** Displays direction in human-readable format. For debugging purposes.
 	@param - direction in maze's system.
@@ -159,6 +156,12 @@ public:
 	*/
 	void loop();
 
+	void loop0();
+	void loop1();
+	void loop2();
+	void loop3();
+	void loop4();
+	
 	/** Maps walls detected and other external readings in variables.
 	*/
 	void map();

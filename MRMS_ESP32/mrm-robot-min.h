@@ -32,6 +32,9 @@ public:
 	/** Custom test
 	*/
 	void loop();
+	void loop0();
+	void loop1();
+	void loop2();
 };
 
 

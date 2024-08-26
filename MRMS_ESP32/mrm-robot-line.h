@@ -32,25 +32,7 @@ enum ledSign {LED_CUSTOM, LED_EVACUATION_ZONE, LED_FULL_CROSSING_BOTH_MARKS, LED
 	LED_CURVE_RIGHT, LED_OBSTACLE, LED_OBSTACLE_AROUND_LEFT, LED_OBSTACLE_AROUND_RIGHT, LED_PAUSE, LED_PLAY, LED_T_CROSSING_BY_L, 
 	LED_T_CROSSING_BY_R, LED_WALL_AHEAD, LED_WALL_L, LED_WALL_R};
 
-/* All the Action-classes have to be forward declared here (before RobotLine) as RobotLine declaration uses them. The other option would be
-not to declare them here, but in that case Action-objects in RobotLine will have to be declared as ActionBase class, forcing downcast later in code, if
-derived functions are used.*/
-class ActionEvacuationZone;
-class ActionLineFollow;
-class ActionLoop0;
-class ActionLoop1;
-class ActionLoop2;
-class ActionLoop3;
-class ActionLoop4;
-class ActionLoop5;
-class ActionLoop6;
-class ActionLoop7;
-class ActionLoop8;
-class ActionLoop9;
-class ActionLoopMenu;
-class ActionObstacleAvoid;
-class ActionRCJLine;
-class ActionMotorShortTest;
+class ActionRobotLine;
 
 /** Robot for RCJ Rescue Line, a class derived from the base Robot class.
 */
@@ -62,26 +44,19 @@ class RobotLine : public Robot {
 	const uint8_t LAST_TRANSISTOR = 7; // mrm-ref-can: 8, mrm-ref-can8: 7
 
 	// Actions' declarations
-	ActionEvacuationZone* actionEvacuationZone;
-	ActionObstacleAvoid* actionObstacleAvoid;
-	ActionLineFollow* actionLineFollow;
-	ActionRCJLine* actionRCJLine;
-	ActionBase* actionWallFollow;
-	ActionStop* actionStop;
-	ActionMotorShortTest* actionMotorShortTest;
+	ActionRobotLine* actionEvacuationZone;
+	ActionRobotLine* actionObstacleAvoid;
+	ActionRobotLine* actionLineFollow;
+	ActionRobotLine* actionRCJLine;
+	ActionRobotLine* actionStop; // Robot function
+	ActionRobotLine* actionMotorShortTest;
 
 	// Generic actions
-	ActionLoop0* actionLoop0;
-	ActionLoop1* actionLoop1;
-	ActionLoop2* actionLoop2;
-	ActionLoop3* actionLoop3;
-	ActionLoop4* actionLoop4;
-	ActionLoop5* actionLoop5;
-	ActionLoop6* actionLoop6;
-	ActionLoop7* actionLoop7;
-	ActionLoop8* actionLoop8;
-	ActionLoop9* actionLoop9;
-	ActionLoopMenu* actionLoopMenu;
+	ActionRobotLine* actionLoop5;
+	ActionRobotLine* actionLoop6;
+	ActionRobotLine* actionLoop7;
+	ActionRobotLine* actionLoop8;
+	ActionRobotLine* actionLoop9;
 
 	uint16_t barrierBrightest = 2000; // Default value, it should be calibrated.
 
@@ -247,9 +222,6 @@ public:
 
 	/** Generic actions, use them as templates
 	*/
-	void loop0();
-	void loop1();
-	void loop2();
 	void loop3();
 	void loop4();
 	void loop5();
@@ -291,6 +263,10 @@ public:
 	/** Custom test
 	*/
 	void loop();
+
+	void loop0();
+	void loop1();
+	void loop2();
 
 	/** Check markers and turn if any found
 	@return - true if marker found, false otherwise
@@ -442,122 +418,10 @@ for no-menu actions.
 The fourth pareameter is menu level. When omitted, the action will not be a part of the menu. Use 1 otherwise. Higher level numbers will display the action in submenues, not used here.
 */
 
-/** Follow a line.
-*/
-class ActionLineFollow : public ActionBase {
-	void perform(){ ((RobotLine*)_robot)->lineFollow(); }
+class ActionRobotLine : public ActionBase {
+	void perform(){(((RobotLine*)_robot)->*_actionPerform)(); };
 public:
-	ActionLineFollow(RobotLine* robot) : ActionBase(robot, "lnf", "Line follow", 1) {}
-};
-
-/** Avoid an obstacle.
-*/
-class ActionObstacleAvoid : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->obstacleAvoid(); }
-public:
-	bool leftOfObstacle; // Obstacle is on the robot's left side
-
-	ActionObstacleAvoid(RobotLine* robot) : ActionBase(robot, "obs", "Obstacle avoid", 0) {}
-};
-
-/** Evacuation zone algorithm.
-*/
-class ActionEvacuationZone : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->evacuationZone(); }
-public:
-
-	ActionEvacuationZone(RobotLine* robot) : ActionBase(robot, "eva", "Evacuation zone", 1) {}
-};
-
-/** Start RCJ Line run.
-*/
-class ActionRCJLine : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->rcjLine(); }
-public:
-	ActionRCJLine(Robot* robot) : ActionBase(robot, "lin", "RCJ Line", 1) {}
-};
-
-/** Follow a wall.
-*/
-class ActionWallFollow : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->wallFollow(); }
-public:
-	ActionWallFollow(RobotLine* robot) : ActionBase(robot, "wal", "Wall follow") {}
-};
-
-
-// ****************** Generic actions
-
-class ActionLoop0 : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->loop0(); }
-public:
-	ActionLoop0(RobotLine* robot) : ActionBase(robot, "lo0", "Loop 0", 8) {}
-};
-
-class ActionLoop1 : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->loop1(); }
-public:
-	ActionLoop1(RobotLine* robot) : ActionBase(robot, "lo1", "Loop 1", 8) {}
-};
-
-class ActionLoop2 : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->loop2(); }
-public:
-	ActionLoop2(RobotLine* robot) : ActionBase(robot, "lo2", "Loop 2", 8) {}
-};
-
-class ActionLoop3 : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->loop3(); }
-public:
-	ActionLoop3(RobotLine* robot) : ActionBase(robot, "lo3", "Loop 3", 8) {}
-};
-
-class ActionLoop4 : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->loop4(); }
-public:
-	ActionLoop4(RobotLine* robot) : ActionBase(robot, "lo4", "Loop 4", 8) {}
-};
-
-class ActionLoop5 : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->loop5(); }
-public:
-	ActionLoop5(RobotLine* robot) : ActionBase(robot, "lo5", "Loop 5", 8) {}
-};
-
-class ActionLoop6 : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->loop6(); }
-public:
-	ActionLoop6(RobotLine* robot) : ActionBase(robot, "lo6", "Loop 6", 8) {}
-};
-
-class ActionLoop7 : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->loop7(); }
-public:
-	ActionLoop7(RobotLine* robot) : ActionBase(robot, "lo7", "Loop 7", 8) {}
-};
-
-class ActionLoop8 : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->loop8(); }
-public:
-	ActionLoop8(RobotLine* robot) : ActionBase(robot, "lo8", "Loop 8", 8) {}
-};
-
-class ActionLoop9 : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->loop9(); }
-public:
-	ActionLoop9(RobotLine* robot) : ActionBase(robot, "lo9", "Loop 9", 8) {}
-};
-
-/** Menu for generic actions
-*/
-class ActionLoopMenu : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->loopMenu(); }
-public:
-	ActionLoopMenu(Robot* robot) : ActionBase(robot, "lme", "Loop (menu)", 1) {}
-};
-
-class ActionMotorShortTest : public ActionBase {
-	void perform() { ((RobotLine*)_robot)->motorShortTest(); }
-public:
-	ActionMotorShortTest(Robot* robot) : ActionBase(robot, "msh", "Motor short test") {}
+	ActionRobotLine(Robot* robot, const char shortcut[4], const char text[20], uint8_t menuLevel = 1, Board::BoardId boardsId = Board::BoardId::ID_ANY,
+		Mrm_8x8a::LEDSign* ledSign8x8 = NULL,  void (RobotLine::*actionPerform)() = NULL) : 
+		ActionBase(robot, shortcut, text, menuLevel, boardsId, ledSign8x8, (void (Robot::*)())actionPerform) {}
 };

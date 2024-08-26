@@ -39,7 +39,6 @@ RobotMaze::RobotMaze(char name[]) : Robot(name) {
 	actionMoveAhead = new ActionMoveAhead(this);
 	actionMoveTurn = new ActionMoveTurn(this);
 	actionRescueMaze = new ActionRescueMaze(this);
-	actionStop = new ActionStop(this);
 
 	// The actions that should be displayed in menus must be added to menu-callable actions. You can use action-objects defined
 	// right above, or can create new objects. In the latter case, the inline-created objects will have no pointer and cannot be
@@ -54,7 +53,7 @@ RobotMaze::RobotMaze(char name[]) : Robot(name) {
 	// Set buttons' actions
 	mrm_8x8a->actionSet(actionRescueMaze, 0); // Button 0 starts RCJ Maze.
 	mrm_8x8a->actionSet(_actionLoop, 2); // Button 3 starts user defined loop() function
-	mrm_8x8a->actionSet(actionStop, 3); // Stop the robot
+	mrm_8x8a->actionSet(_actionStop, 3); // Stop the robot
 
 	// Upload custom bitmaps into mrm-8x8a.
 	bitmapsSet();
@@ -75,87 +74,15 @@ uint32_t encoder2Count = 0;
 */
 void RobotMaze::bitmapsSet() {
 	mrm_8x8a->alive(0, true); // Makes sure that mrm-8x8a is present and functioning. If not, issues a warning message.
-
-	// The 2 arrays will hold red and green pixels. Both red an green pixel on - orange color.
-	uint8_t red[8];
-	uint8_t green[8];
-	for (uint8_t i = 0; i < 8; i++) // Erase all
-		red[i] = 0, green[i] = 0;
-
-	/* 1 will turn the pixel on, 0 off. 0bxxxxxxxx is a binary format of the number. Start with "0b" and list all the bits, starting from 
-	the most significant one (MSB). Do that for each byte of the green and red arrays.*/
-
-	// Pause
-	green[0] = 0b11100111;
-	green[1] = 0b11100111;
-	green[2] = 0b11100111;
-	green[3] = 0b11100111;
-	green[4] = 0b11100111;
-	green[5] = 0b11100111;
-	green[6] = 0b11100111;
-	green[7] = 0b11100111;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	/* Store this bitmap in mrm-8x8a. The 3rd parameter is bitmap's address. If You want to define new bitmaps, expand LedSign enum with
-	Your names, and use the new values for Your bitmaps. This parameter can be a plain number, but enum keeps thing tidy.*/
-	mrm_8x8a->bitmapCustomStore(red, green, LedSign::MAZE_LED_PAUSE);
-	delayMs(1); // Wait a little in order not to queue too many CAN Buss messages at once.
-
-	// Play.
-	green[0] = 0b0110000;
-	green[1] = 0b0111000;
-	green[2] = 0b0111100;
-	green[3] = 0b0111110;
-	green[4] = 0b0111110;
-	green[5] = 0b0111100;
-	green[6] = 0b0111000;
-	green[7] = 0b0110000;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LedSign::MAZE_LED_PLAY);
-	delayMs(1);
-
-	// Follow IMU.
-	green[0] = 0b00000000;
-	green[1] = 0b00010000;
-	green[2] = 0b00111000;
-	green[3] = 0b01111100;
-	green[4] = 0b00111000;
-	green[5] = 0b00111000;
-	green[6] = 0b00000000;
-	green[7] = 0b00000000;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LedSign::MAZE_IMU_FOLLOW);
-	delayMs(1);
-
-	// Follow wall down, green taken from Follow IMU bitmap.
-	for (uint8_t i = 0; i < 7; i++)
-		red[i] = 0;
-	red[7] = 0b11111111;
-	mrm_8x8a->bitmapCustomStore(red, green, LedSign::MAZE_WALL_DOWN_FOLLOW);
-	delayMs(1);
-
-	// Follow wall left, green taken from Follow IMU bitmap.
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0b10000000;
-	mrm_8x8a->bitmapCustomStore(red, green, LedSign::MAZE_WALL_LEFT_FOLLOW);
-	delayMs(1);
-
-	// Follow wall right, green taken from Follow IMU bitmap.
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0b00000001;
-	mrm_8x8a->bitmapCustomStore(red, green, LedSign::MAZE_WALL_RIGHT_FOLLOW);
-	delayMs(1);
-
-	// Follow wall up, green taken from Follow IMU bitmap.
-	red[0] = 0b11111111;
-	for (uint8_t i = 1; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LedSign::MAZE_WALL_UP_FOLLOW);
-	delayMs(1);
-
-	// Define Your bitmaps here.
+	
+	const std::vector<Mrm_8x8a::ledSign> selectedImages = {Mrm_8x8a::LED_CUSTOM, Mrm_8x8a::LED_EVACUATION_ZONE, Mrm_8x8a::LED_FULL_CROSSING_BOTH_MARKS,  
+		Mrm_8x8a::LED_FULL_CROSSING_MARK_LEFT, Mrm_8x8a::LED_FULL_CROSSING_MARK_RIGHT, Mrm_8x8a::LED_FULL_CROSSING_NO_MARK,
+		Mrm_8x8a::LED_HALF_CROSSING_MARK_LEFT, Mrm_8x8a::LED_HALF_CROSSING_MARK_RIGHT, Mrm_8x8a::LED_HALF_CROSSING_LEFT_NO_MARK,
+		Mrm_8x8a:: LED_HALF_CROSSING_RIGHT_NO_MARK, Mrm_8x8a::LED_LINE_FULL, Mrm_8x8a::LED_LINE_FULL_BOTH_MARKS, Mrm_8x8a::LED_LINE_FULL_MARK_LEFT,
+		Mrm_8x8a::LED_LINE_FULL_MARK_RIGHT, Mrm_8x8a::LED_LINE_INTERRUPTED,  Mrm_8x8a::LED_CURVE_LEFT, Mrm_8x8a::LED_CURVE_RIGHT, 
+		Mrm_8x8a::LED_OBSTACLE, Mrm_8x8a::LED_OBSTACLE_AROUND_LEFT, Mrm_8x8a::LED_OBSTACLE_AROUND_RIGHT, Mrm_8x8a::LED_PAUSE, Mrm_8x8a::LED_PLAY,
+		Mrm_8x8a::LED_T_CROSSING_BY_L,Mrm_8x8a::LED_T_CROSSING_BY_R, Mrm_8x8a::LED_WALL_AHEAD, Mrm_8x8a::LED_WALL_L, Mrm_8x8a::LED_WALL_R};
+	mrm_8x8a->bitmapsSet(selectedImages);
 
 	delayMs(10); // Wait a little to be sure that the next sign will be displayed.
 }
@@ -232,6 +159,16 @@ void RobotMaze::directionDisplay(Direction direction){
 	}
 }
 
+/** Distance measuring function. Sensors must have deviceId addresses exactly like here: 0 FR, 1 FL, 2 LF, 3 LB, 4 BL, 5 BR, 6 RB, 7 RF. F is front, B is back, L is left, R is right.
+In 2-letter designations first letter is a major direction, second minor. For example FL means Front-Left and first we choose major side (robot's front), then minor (left sensor on that side).
+In other words, first sensor is front-right and all the others must have increasing	addresses counter-clockwise (CCW).
+@direction - direction in maze's system. Therefore, LEFT is always left, as seen from outside of the maze, no matter what the robot's direction is. It is normally not robot's left side.
+@firstCCW - first when counting ounter-clockwise (CCW) on that side, looking from inside of the robot. For example FL is first CCW and FR is not.
+@return - distance in mm.
+*/
+uint16_t RobotMaze::distance(Direction direction, bool firstCCW) {
+	return mrm_lid_can_b->reading(2 * mToR(direction) + firstCCW); 
+}
 
 /** Increase encoder count
 */
@@ -294,8 +231,23 @@ bool RobotMaze::line(uint8_t transistorNumber) {
 /** Custom test. The function will be called many times during the test, till You issue "x" menu-command.
 */
 void RobotMaze::loop() {
-	go(30, -30);
+	if (serialDataCount() > 0)
+		print("Data: %s\n\r", uartRxCommandCumulative);
 }
+
+void RobotMaze::loop0() { 
+if (setup())
+	pinMode(25, OUTPUT);
+	digitalWrite(25, HIGH);
+	delay(500);
+	digitalWrite(25, LOW);
+	delay(500);
+
+}
+void RobotMaze::loop1() {}
+void RobotMaze::loop2() {}
+void RobotMaze::loop3() {}
+void RobotMaze::loop4() {}
 
 /** Maps walls detected and other external readings in variables.
 */
@@ -556,7 +508,7 @@ void RobotMaze::rescueMaze() {
 	testMode = false; // The robot mustn't stop after each action
 	print("Maze start\n\r");
 	// mrm-8x8a is positioned so that its bottom is aligned robot's left side. Rotate the display so that the image is aligned with robot's back.
-	mrm_8x8a->rotationSet(LED_8X8_BY_90_DEGREES);
+	mrm_8x8a->rotationSet(Mrm_8x8a::LED_8X8_BY_90_DEGREES);
 	bitmapsSet(); // Upload custom bitmaps into mrm-8x8a.
 	mrm_8x8a->bitmapCustomStoredDisplay(LedSign::MAZE_LED_PLAY); // Display play sign.
 	Tile::first = new Tile(0, 0, NOWHERE); // Set the first tile and start the chain. Tile::first will point to its head, enabling iterating.
@@ -748,7 +700,7 @@ void RobotMaze::wallsDisplay() {
 void RobotMaze::wallsTest() {
 	if (setup()) { // First run of the action.
 		directionCurrent = Direction::UP; // We should be standing behind the robot. Otherwise, change this value.
-		mrm_8x8a->rotationSet(LED_8X8_BY_90_DEGREES); // Rotate the display as it is mounted rotated by 90 degrees.
+		mrm_8x8a->rotationSet(Mrm_8x8a::LED_8X8_BY_90_DEGREES); // Rotate the display as it is mounted rotated by 90 degrees.
 	}
 	// Display the values in terminals.
 	print(" FR:%i", distance(Direction::UP, false));

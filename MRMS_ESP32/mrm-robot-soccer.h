@@ -250,7 +250,7 @@ public:
 class ActionSoccerBounce : public ActionBase {
 	void perform() { ((RobotSoccer*)_robot)->bounce(); }
 public:
-	ActionSoccerBounce(RobotSoccer* robot, LEDSign* ledSign = NULL) : ActionBase(robot, "bou", "Soccer bounce", 1, ID_ANY, ledSign) {}
+	ActionSoccerBounce(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "bou", "Soccer bounce", 1, Board::ID_ANY, ledSign) {}
 };
 
 /** Test barrier.
@@ -258,7 +258,7 @@ public:
 class ActionSoccerBarrierTest : public ActionBase {
 	void perform() { ((RobotSoccer*)_robot)->barrierTest(); }
 public:
-	ActionSoccerBarrierTest(RobotSoccer* robot, LEDSign* ledSign = NULL) : ActionBase(robot, "bar", "Soccer barr. test", 1, ID_ANY, ledSign) {}
+	ActionSoccerBarrierTest(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "bar", "Soccer barr. test", 1, Board::ID_ANY, ledSign) {}
 };
 
 /** Calibrating all the line sensors
@@ -266,7 +266,7 @@ public:
 class ActionSoccerCalibrate : public ActionBase {
 	void perform() { ((RobotSoccer*)_robot)->calibrate(); }
 public:
-	ActionSoccerCalibrate(RobotSoccer* robot, LEDSign* ledSign = NULL) : ActionBase(robot, "clb", "Soccer calibrate", 1, ID_ANY, ledSign) {}
+	ActionSoccerCalibrate(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "clb", "Soccer calibrate", 1, Board::ID_ANY, ledSign) {}
 };
 
 
@@ -275,7 +275,7 @@ public:
 class ActionSoccerCatch : public ActionBase {
 	void perform() { ((RobotSoccer*)_robot)->catchBall(); }
 public:
-	ActionSoccerCatch(RobotSoccer* robot, LEDSign* ledSign = NULL) : ActionBase(robot, "cat", "Soccer catch", 0, ID_ANY, ledSign) {}
+	ActionSoccerCatch(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "cat", "Soccer catch", 0, Board::ID_ANY, ledSign) {}
 };
 
 /** Go to goal
@@ -283,7 +283,7 @@ public:
 class ActionSoccerGoalApproach : public ActionBase {
 	void perform() { ((RobotSoccer*)_robot)->goalApproach(); }
 public:
-	ActionSoccerGoalApproach(RobotSoccer* robot, LEDSign* ledSign = NULL) : ActionBase(robot, "apr", "Soccer approach", 0, ID_ANY, ledSign) {}
+	ActionSoccerGoalApproach(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "apr", "Soccer approach", 0, Board::ID_ANY, ledSign) {}
 };
 
 /** Starts robot.
@@ -291,7 +291,7 @@ public:
 class ActionSoccerPlay : public ActionBase {
 	void perform(){ ((RobotSoccer*)_robot)->play(); }
 public:
-	ActionSoccerPlay(RobotSoccer* robot, LEDSign* ledSign = NULL) : ActionBase(robot, "soc", "Soccer play") {}
+	ActionSoccerPlay(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "soc", "Soccer play") {}
 };
 
 /** Idle position, before own goal.
@@ -299,11 +299,11 @@ public:
 class ActionSoccerIdle : public ActionBase {
 	void perform() { ((RobotSoccer*)_robot)->idle(); }
 public:
-	ActionSoccerIdle(RobotSoccer* robot, LEDSign* ledSign = NULL) : ActionBase(robot, "idl", "Soccer idle", 0, ID_ANY, ledSign) {}
+	ActionSoccerIdle(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "idl", "Soccer idle", 0, Board::ID_ANY, ledSign) {}
 };
 
 class ActionSoccerLineAvoid : public ActionBase {
 	void perform() { ((RobotSoccer*)_robot)->lineAvoid(); }
 public:
-	ActionSoccerLineAvoid(RobotSoccer* robot, LEDSign* ledSign = NULL) : ActionBase(robot, "avo", "Soccer line avoid", 0, ID_ANY, ledSign) {}
+	ActionSoccerLineAvoid(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "avo", "Soccer line avoid", 0, Board::ID_ANY, ledSign) {}
 };

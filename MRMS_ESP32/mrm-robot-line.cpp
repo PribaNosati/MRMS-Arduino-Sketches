@@ -22,27 +22,21 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 	// Therefore, You can connect motors freely, but have to adjust the parameters here. In this example output (connector) 0 is LB, etc.
 	motorGroup = new MotorGroupDifferential(this, mrm_mot4x3_6can, 0, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 3);
 
-	// All the actions will be defined here; the objects will be created.
-	actionEvacuationZone = new ActionEvacuationZone(this);
-	actionLineFollow = new ActionLineFollow(this);
-	actionObstacleAvoid = new ActionObstacleAvoid(this);
-	actionRCJLine = new ActionRCJLine(this);
-	actionWallFollow = new ActionWallFollow(this);
-	actionStop = new ActionStop(this);
-	actionMotorShortTest = new ActionMotorShortTest(this);
+	Mrm_8x8a::LEDSignText* signTest = new Mrm_8x8a::LEDSignText();
 
+	// All the actions that sholuld be called from code will be defined here; the callable objects will be created.
+	actionEvacuationZone = new ActionRobotLine(this, "eva", "Evacuation zone", 1, Board::BoardId::ID_ANY, NULL, &RobotLine::evacuationZone);
+	actionLineFollow = new ActionRobotLine(this, "lnf", "Line follow", 1, Board::BoardId::ID_ANY, NULL, &RobotLine::lineFollow);
+	actionObstacleAvoid = new ActionRobotLine(this, "obs", "Obstacle avoid", 0, Board::BoardId::ID_ANY, NULL, &RobotLine::obstacleAvoid);
+	actionRCJLine = new ActionRobotLine(this, "lin", "RCJ line", 1, Board::BoardId::ID_ANY, NULL, &RobotLine::rcjLine);
+	actionStop = new ActionRobotLine(this, "sto", "Stop", 1, Board::BoardId::ID_ANY, NULL, &RobotLine::stop);
+	actionMotorShortTest = new ActionRobotLine(this, "msh", "Motor short test", 1, Board::BoardId::ID_ANY, NULL, &RobotLine::motorShortTest);
 	// Generic actions
-	actionLoopMenu = new ActionLoopMenu(this);
-	actionLoop0 = new ActionLoop0(this);
-	actionLoop1 = new ActionLoop1(this);
-	actionLoop2 = new ActionLoop2(this);
-	actionLoop3 = new ActionLoop3(this);
-	actionLoop4 = new ActionLoop4(this);
-	actionLoop5 = new ActionLoop5(this);
-	actionLoop6 = new ActionLoop6(this);
-	actionLoop7 = new ActionLoop7(this);
-	actionLoop8 = new ActionLoop8(this);
-	actionLoop9 = new ActionLoop9(this);
+	actionLoop5 = new ActionRobotLine(this, "lo5", "loop5", 8, Board::BoardId::ID_ANY, signTest, &RobotLine::loop5);
+	actionLoop6 = new ActionRobotLine(this, "lo6", "loop6", 8, Board::BoardId::ID_ANY, signTest, &RobotLine::loop6);
+	actionLoop7 = new ActionRobotLine(this, "lo7", "loop6", 8, Board::BoardId::ID_ANY, signTest, &RobotLine::loop7);
+	actionLoop8 = new ActionRobotLine(this, "lo8", "loop8", 8, Board::BoardId::ID_ANY, signTest, &RobotLine::loop8);
+	actionLoop9 = new ActionRobotLine(this, "lo9", "loop9", 8, Board::BoardId::ID_ANY, signTest, &RobotLine::loop9);
 
 	// The actions that should be displayed in menus must be added to menu-callable actions. You can use action-objects defined
 	// right above, or can create new objects. In the latter case, the inline-created objects will have no pointer and cannot be
@@ -51,16 +45,7 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 	actionAdd(actionLineFollow);
 	actionAdd(actionObstacleAvoid);
 	actionAdd(actionRCJLine);
-	actionAdd(actionWallFollow);
 	actionAdd(actionMotorShortTest);
-
-	// Generic actions
-	actionAdd(actionLoopMenu);
-	actionAdd(actionLoop0);
-	actionAdd(actionLoop1);
-	actionAdd(actionLoop2);
-	actionAdd(actionLoop3);
-	actionAdd(actionLoop4);
 	actionAdd(actionLoop5);
 	actionAdd(actionLoop6);
 	actionAdd(actionLoop7);
@@ -161,443 +146,14 @@ bool RobotLine::barrier() {
 void RobotLine::bitmapsSet() {
 	mrm_8x8a->alive(0, true); // Makes sure that mrm-8x8a is present and functioning. If not, issues a warning message.
 
-	// The 2 arrays will hold red and green pixels. Both red an green pixel on - orange color.
-	uint8_t red[8];
-	uint8_t green[8];
-
-	/* 1 will turn the pixel on, 0 off. 0bxxxxxxxx is a binary format of the number. Start with "0b" and list all the bits, starting from
-	the most significant one (MSB). Do that for each byte of the green and red arrays.*/
-
-	// Evacuation zone
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	green[0] = 0b11111111;
-	green[1] = 0b10000001;
-	green[2] = 0b10000001;
-	green[3] = 0b10000001;
-	green[4] = 0b10000001;
-	green[5] = 0b11000001;
-	green[6] = 0b11100001;
-	green[7] = 0b11111111;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_EVACUATION_ZONE);
-	delayMs(1);
-
-	// Full line, no marks
-	for (uint8_t i = 0; i < 8; i++)
-		green[i] = 0b00011000;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_LINE_FULL);
-	delayMs(1);
-
-	// Full line, both marks
-	for (uint8_t i = 0; i < 8; i++)
-		green[i] = 0b00011000;
-	red[0] = 0b00000000;
-	red[1] = 0b00000000;
-	red[2] = 0b00000000;
-	red[3] = 0b00000000;
-	red[4] = 0b01100110;
-	red[5] = 0b01100110;
-	red[6] = 0b00000000;
-	red[7] = 0b00000000;
-	/* Store this bitmap in mrm-8x8a. The 3rd parameter is bitmap's address. If You want to define new bitmaps, expand LedSign enum with
-	Your names, and use the new values for Your bitmaps. This parameter can be a plain number, but enum keeps thing tidy.*/
-	mrm_8x8a->bitmapCustomStore(red, green, LED_LINE_FULL_BOTH_MARKS);
-	delayMs(1);
-
-	// Full line, left mark.
-	for (uint8_t i = 0; i < 8; i++)
-		green[i] = 0b00011000;
-	red[0] = 0b00000000;
-	red[1] = 0b00000000;
-	red[2] = 0b00000000;
-	red[3] = 0b00000000;
-	red[4] = 0b01100000;
-	red[5] = 0b01100000;
-	red[6] = 0b00000000;
-	red[7] = 0b00000000;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_LINE_FULL_MARK_LEFT);
-	delayMs(1);
-
-	// Full line, right mark.
-	for (uint8_t i = 0; i < 8; i++)
-		green[i] = 0b00011000;
-	red[0] = 0b00000000;
-	red[1] = 0b00000000;
-	red[2] = 0b00000000;
-	red[3] = 0b00000000;
-	red[4] = 0b00000110;
-	red[5] = 0b00000110;
-	red[6] = 0b00000000;
-	red[7] = 0b00000000;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_LINE_FULL_MARK_RIGHT);
-	delayMs(1);
-
-	// Full crossing, both marks.
-	green[0] = 0b00000000;
-	green[1] = 0b00000000;
-	green[2] = 0b11111111;
-	green[3] = 0b11111111;
-	green[4] = 0b00011000;
-	green[5] = 0b00011000;
-	green[6] = 0b00011000;
-	green[7] = 0b00011000;
-
-	red[0] = 0b00000000;
-	red[1] = 0b00000000;
-	red[2] = 0b00000000;
-	red[3] = 0b00000000;
-	red[4] = 0b01100110;
-	red[5] = 0b01100110;
-	red[6] = 0b00000000;
-	red[7] = 0b00000000;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_FULL_CROSSING_BOTH_MARKS);
-	delayMs(1);
-
-	// Full crossing, mark left.
-	green[0] = 0b00000000;
-	green[1] = 0b00000000;
-	green[2] = 0b11111111;
-	green[3] = 0b11111111;
-	green[4] = 0b00011000;
-	green[5] = 0b00011000;
-	green[6] = 0b00011000;
-	green[7] = 0b00011000;
-
-	red[0] = 0b00000000;
-	red[1] = 0b00000000;
-	red[2] = 0b00000000;
-	red[3] = 0b00000000;
-	red[4] = 0b01100000;
-	red[5] = 0b01100000;
-	red[6] = 0b00000000;
-	red[7] = 0b00000000;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_FULL_CROSSING_MARK_LEFT);
-	delayMs(1);
-
-	// Full crossing, mark right.
-	green[0] = 0b00000000;
-	green[1] = 0b00000000;
-	green[2] = 0b11111111;
-	green[3] = 0b11111111;
-	green[4] = 0b00011000;
-	green[5] = 0b00011000;
-	green[6] = 0b00011000;
-	green[7] = 0b00011000;
-
-	red[0] = 0b00000000;
-	red[1] = 0b00000000;
-	red[2] = 0b00000000;
-	red[3] = 0b00000000;
-	red[4] = 0b00000110;
-	red[5] = 0b00000110;
-	red[6] = 0b00000000;
-	red[7] = 0b00000000;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_FULL_CROSSING_MARK_RIGHT);
-	delayMs(1);
-
-	// Full crossing, no marks.
-	green[0] = 0b00011000;
-	green[1] = 0b00011000;
-	green[2] = 0b11111111;
-	green[3] = 0b11111111;
-	green[4] = 0b00011000;
-	green[5] = 0b00011000;
-	green[6] = 0b00011000;
-	green[7] = 0b00011000;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_FULL_CROSSING_NO_MARK);
-	delayMs(1);
-
-	// Half crossing, mark right.
-	green[0] = 0b00011000;
-	green[1] = 0b00011000;
-	green[2] = 0b00011111;
-	green[3] = 0b00011111;
-	green[4] = 0b00011000;
-	green[5] = 0b00011000;
-	green[6] = 0b00011000;
-	green[7] = 0b00011000;
-
-	red[0] = 0b00000000;
-	red[1] = 0b00000000;
-	red[2] = 0b00000000;
-	red[3] = 0b00000000;
-	red[4] = 0b00000110;
-	red[5] = 0b00000110;
-	red[6] = 0b00000000;
-	red[7] = 0b00000000;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_HALF_CROSSING_MARK_RIGHT);
-	delayMs(1);
-
-	// Half crossing, mark left.
-	green[0] = 0b00011000;
-	green[1] = 0b00011000;
-	green[2] = 0b11111000;
-	green[3] = 0b11111000;
-	green[4] = 0b00011000;
-	green[5] = 0b00011000;
-	green[6] = 0b00011000;
-	green[7] = 0b00011000;
-
-	red[0] = 0b00000000;
-	red[1] = 0b00000000;
-	red[2] = 0b00000000;
-	red[3] = 0b00000000;
-	red[4] = 0b01100000;
-	red[5] = 0b01100000;
-	red[6] = 0b00000000;
-	red[7] = 0b00000000;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_HALF_CROSSING_MARK_LEFT);
-	delayMs(1);
-
-	// Half crossing right, no mark.
-	green[0] = 0b00011000;
-	green[1] = 0b00011000;
-	green[2] = 0b00011111;
-	green[3] = 0b00011111;
-	green[4] = 0b00011000;
-	green[5] = 0b00011000;
-	green[6] = 0b00011000;
-	green[7] = 0b00011000;
-
-	red[0] = 0b00000000;
-	red[1] = 0b00000000;
-	red[2] = 0b00000000;
-	red[3] = 0b00000000;
-	red[4] = 0b00000000;
-	red[5] = 0b00000000;
-	red[6] = 0b00000000;
-	red[7] = 0b00000000;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_HALF_CROSSING_RIGHT_NO_MARK);
-	delayMs(1);
-
-	// Half crossing left, no mark
-	green[0] = 0b00011000;
-	green[1] = 0b00011000;
-	green[2] = 0b11111000;
-	green[3] = 0b11111000;
-	green[4] = 0b00011000;
-	green[5] = 0b00011000;
-	green[6] = 0b00011000;
-	green[7] = 0b00011000;
-
-	red[0] = 0b00000000;
-	red[1] = 0b00000000;
-	red[2] = 0b00000000;
-	red[3] = 0b00000000;
-	red[4] = 0b00000000;
-	red[5] = 0b00000000;
-	red[6] = 0b00000000;
-	red[7] = 0b00000000;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_HALF_CROSSING_LEFT_NO_MARK);
-	delayMs(1);
-
-	// Interrupted line.
-	green[0] = 0b00011000;
-	green[1] = 0b00011000;
-	green[2] = 0b00000000;
-	green[3] = 0b00000000;
-	green[4] = 0b00000000;
-	green[5] = 0b00000000;
-	green[6] = 0b00011000;
-	green[7] = 0b00011000;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_LINE_INTERRUPTED);
-	delayMs(1);
-
-	// Curve left.
-	green[0] = 0b00000000;
-	green[1] = 0b00000000;
-	green[2] = 0b11111000;
-	green[3] = 0b11111000;
-	green[4] = 0b00011000;
-	green[5] = 0b00011000;
-	green[6] = 0b00011000;
-	green[7] = 0b00011000;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_CURVE_LEFT);
-	delayMs(1);
-
-	// Curve right.
-	green[0] = 0b00000000;
-	green[1] = 0b00000000;
-	green[2] = 0b00011111;
-	green[3] = 0b00011111;
-	green[4] = 0b00011000;
-	green[5] = 0b00011000;
-	green[6] = 0b00011000;
-	green[7] = 0b00011000;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_CURVE_RIGHT);
-	delayMs(1);
-
-	// Obstacle.
-	green[0] = 0b00011000;
-	green[1] = 0b00011000;
-	green[2] = 0b00000000;
-	green[3] = 0b00011000;
-	green[4] = 0b00111100;
-	green[5] = 0b01111110;
-	green[6] = 0b00011000;
-	green[7] = 0b00011000;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_OBSTACLE);
-	delayMs(1);
-
-	// Around obstacle left.
-	green[0] = 0b00000000;
-	green[1] = 0b00000000;
-	green[2] = 0b00000011;
-	green[3] = 0b00100011;
-	green[4] = 0b01110000;
-	green[5] = 0b11111000;
-	green[6] = 0b01110000;
-	green[7] = 0b01110000;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_OBSTACLE_AROUND_LEFT);
-	delayMs(1);
-
-	// Around obstacle right.
-	green[0] = 0b00000000;
-	green[1] = 0b00000000;
-	green[2] = 0b11000000;
-	green[3] = 0b11000100;
-	green[4] = 0b00001110;
-	green[5] = 0b00011111;
-	green[6] = 0b00001110;
-	green[7] = 0b00001110;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_OBSTACLE_AROUND_RIGHT);
-	delayMs(1);
-
-	// Pause.
-	green[0] = 0b11100111;
-	green[1] = 0b11100111;
-	green[2] = 0b11100111;
-	green[3] = 0b11100111;
-	green[4] = 0b11100111;
-	green[5] = 0b11100111;
-	green[6] = 0b11100111;
-	green[7] = 0b11100111;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_PAUSE);
-	delayMs(1);
-
-	// Play.
-	green[0] = 0b0110000;
-	green[1] = 0b0111000;
-	green[2] = 0b0111100;
-	green[3] = 0b0111110;
-	green[4] = 0b0111110;
-	green[5] = 0b0111100;
-	green[6] = 0b0111000;
-	green[7] = 0b0110000;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_PLAY);
-	delayMs(1);
-
-	// T-crossing approached by left side.
-	green[0] = 0b0100000;
-	green[1] = 0b0100000;
-	green[2] = 0b0100000;
-	green[3] = 0b0111111;
-	green[4] = 0b0100000;
-	green[5] = 0b0100000;
-	green[6] = 0b0100000;
-	green[7] = 0b0100000;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_T_CROSSING_BY_L);
-	delayMs(1);
-
-	// T-crossing approached by right side.
-	green[0] = 0b0000100;
-	green[1] = 0b0000100;
-	green[2] = 0b0000100;
-	green[3] = 0b1111100;
-	green[4] = 0b0000100;
-	green[5] = 0b0000100;
-	green[6] = 0b0000100;
-	green[7] = 0b0000100;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_T_CROSSING_BY_R);
-	delayMs(1);
-
-	// Wall ahead
-	green[0] = 0b11111111;
-	green[1] = 0b00010000;
-	green[2] = 0b00111000;
-	green[3] = 0b01010100;
-	green[4] = 0b00000000;
-	green[5] = 0b00111000;
-	green[6] = 0b00101000;
-	green[7] = 0b00111000;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_WALL_AHEAD);
-	delayMs(1);
-
-	// Wall on the left side
-	green[0] = 0b10001000;
-	green[1] = 0b10011100;
-	green[2] = 0b10101010;
-	green[3] = 0b10001000;
-	green[4] = 0b10000000;
-	green[5] = 0b10011100;
-	green[6] = 0b10010100;
-	green[7] = 0b10011100;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_WALL_L);
-	delayMs(1);
-
-	// Wall on the right side
-	green[0] = 0b00010001;
-	green[1] = 0b00111001;
-	green[2] = 0b01010101;
-	green[3] = 0b00010001;
-	green[4] = 0b00000001;
-	green[5] = 0b00111001;
-	green[6] = 0b00101001;
-	green[7] = 0b00111001;
-	for (uint8_t i = 0; i < 8; i++)
-		red[i] = 0;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_WALL_R);
-	delayMs(1);
-
-	// Define Your bitmaps here.
-		// Example
-	green[0] = 0b00000001;
-	green[1] = 0b00000011;
-	green[2] = 0b00000111;
-	green[3] = 0b00001111;
-	green[4] = 0b00011111;
-	green[5] = 0b00111111;
-	green[6] = 0b01111111;
-	green[7] = 0b11111111;
-
-	red[0] = 0b11111111;
-	red[1] = 0b01111111;
-	red[2] = 0b00111111;
-	red[3] = 0b00011111;
-	red[4] = 0b00001111;
-	red[5] = 0b00000111;
-	red[6] = 0b00000011;
-	red[7] = 0b00000001;
-	mrm_8x8a->bitmapCustomStore(red, green, LED_CUSTOM);
-	delayMs(1);
+	const std::vector<Mrm_8x8a::ledSign> selectedImages = {Mrm_8x8a::LED_CUSTOM, Mrm_8x8a::LED_EVACUATION_ZONE, Mrm_8x8a::LED_FULL_CROSSING_BOTH_MARKS,  
+	Mrm_8x8a::LED_FULL_CROSSING_MARK_LEFT, Mrm_8x8a::LED_FULL_CROSSING_MARK_RIGHT, Mrm_8x8a::LED_FULL_CROSSING_NO_MARK,
+	Mrm_8x8a::LED_HALF_CROSSING_MARK_LEFT, Mrm_8x8a::LED_HALF_CROSSING_MARK_RIGHT, Mrm_8x8a::LED_HALF_CROSSING_LEFT_NO_MARK,
+	Mrm_8x8a:: LED_HALF_CROSSING_RIGHT_NO_MARK, Mrm_8x8a::LED_LINE_FULL, Mrm_8x8a::LED_LINE_FULL_BOTH_MARKS, Mrm_8x8a::LED_LINE_FULL_MARK_LEFT,
+	Mrm_8x8a::LED_LINE_FULL_MARK_RIGHT, Mrm_8x8a::LED_LINE_INTERRUPTED,  Mrm_8x8a::LED_CURVE_LEFT, Mrm_8x8a::LED_CURVE_RIGHT, 
+	Mrm_8x8a::LED_OBSTACLE, Mrm_8x8a::LED_OBSTACLE_AROUND_LEFT, Mrm_8x8a::LED_OBSTACLE_AROUND_RIGHT, Mrm_8x8a::LED_PAUSE, Mrm_8x8a::LED_PLAY,
+	Mrm_8x8a::LED_T_CROSSING_BY_L,Mrm_8x8a::LED_T_CROSSING_BY_R, Mrm_8x8a::LED_WALL_AHEAD, Mrm_8x8a::LED_WALL_L, Mrm_8x8a::LED_WALL_R};
+	mrm_8x8a->bitmapsSet(selectedImages);
 
 }
 
@@ -935,20 +491,12 @@ void RobotLine::loop() {
 		go(-90, 90);
 	else if (line(0))
 		go(90, -90);
-	else if (line(1))
-		go(70, -20);
-	else if (line(2))
-		go(60, 10);
-	else if (line(3))
-		go(50, 20);
 	else if (line(5))
-		go(20, 50);
-	else if (line(6))
-		go(10, 60);
-	else if (line(7))
-		go(-20, 70);
+		go(10, 90);
+	else if (line(3))
+		go(90, 10);
 	else
-		go(70, 70);
+		go(60, 60);
 }
 
 /** Generic actions, use them as templates
@@ -1128,7 +676,7 @@ void RobotLine::rcjLine() {
 	if (false)
 		if (front() < 100)
 			obstacleAvoid();
-	mrm_8x8a->rotationSet(LED_8X8_BY_90_DEGREES); // Rotate the mrm-8x8a by 90� so that it can be read properly when standing behind the robot.
+	mrm_8x8a->rotationSet(Mrm_8x8a::LED_8X8_BY_90_DEGREES); // Rotate the mrm-8x8a by 90� so that it can be read properly when standing behind the robot.
 	bitmapsSet(); // Upload all the predefined bitmaps into the mrm-8x8a.
 	display(LED_PLAY); // Show "play" sign.
 	mrm_col_can->illumination(0xFF, 1); // Turn mrm-col-can's surface illumination on.
