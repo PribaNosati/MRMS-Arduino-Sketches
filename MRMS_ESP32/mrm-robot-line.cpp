@@ -487,16 +487,14 @@ void RobotLine::lineFollow() {
 /** Custom test. The function will be called many times during the test, till You issue "x" menu command.
 */
 void RobotLine::loop() {
-	if (line(8))
-		go(-90, 90);
-	else if (line(0))
-		go(90, -90);
+	if (frontLeft() < 100 or front() < 100)
+		stop();
 	else if (line(5))
-		go(10, 90);
-	else if (line(3))
-		go(90, 10);
-	else
-		go(60, 60);
+			go(10, 80);
+		else if (line(3))
+			go(80, 10);
+		else
+			go(60, 60);
 }
 
 /** Generic actions, use them as templates
@@ -506,8 +504,26 @@ void RobotLine::loop1() { armCatchReady(); end(); }
 void RobotLine::loop2() { armCatch(); end(); }
 void RobotLine::loop3() { armUp(); end(); }
 void RobotLine::loop4() { armDrop(); end(); }
-void RobotLine::loop5() {	mrm_lid_d->resolutionSet(0, 16); }
-void RobotLine::loop6() { }
+void RobotLine::loop5() {		
+	if (line(8))
+		go(-90, 90);
+	else if (line(0))
+		go(90, -90);
+	else if (line(5))
+		go(10, 90);
+	else if (line(3))
+		go(90, 10);
+	else
+		go(60, 60); 
+	}
+void RobotLine::loop6() { 
+	if (line(5))
+			go(10, 80);
+		else if (line(3))
+			go(80, 10);
+		else
+			go(60, 60);
+}
 void RobotLine::loop7() { }
 void RobotLine::loop8() { }
 void RobotLine::loop9() { }

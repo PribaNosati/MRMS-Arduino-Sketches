@@ -7,6 +7,8 @@
 #include "mrm-robot-maze.h"
 #include <mrm-servo.h>
 #include <mrm-therm-b-can.h>
+#include <mrm-us-b.h>
+
 
 Tile* Tile::first; // Neccessary for static member variable.
 
@@ -231,12 +233,18 @@ bool RobotMaze::line(uint8_t transistorNumber) {
 /** Custom test. The function will be called many times during the test, till You issue "x" menu-command.
 */
 void RobotMaze::loop() {
-	if (serialDataCount() > 0)
-		print("Data: %s\n\r", uartRxCommandCumulative);
+	static int counter = 0;
+	static uint32_t ms = millis();
+	int d = mrm_us_b->reading();
+	if (counter++ == 1000){
+		end();
+		print("%i ms", millis() - ms);
+	}
 }
 
 void RobotMaze::loop0() { 
 if (setup())
+
 	pinMode(25, OUTPUT);
 	digitalWrite(25, HIGH);
 	delay(500);
