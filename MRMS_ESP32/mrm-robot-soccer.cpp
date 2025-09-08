@@ -1,3 +1,4 @@
+#include <Interfaces.h>
 #include <mrm-8x8a.h>
 #include <mrm-bldc2x50.h>
 #include <mrm-imu.h>
@@ -13,7 +14,7 @@
 @param name - it is also used for Bluetooth so a Bluetooth client (like a phone) will list the device using this name.
 */
 RobotSoccer::RobotSoccer(char name[]) : Robot(name) {
-	motorGroup = new MotorGroupStar(this, mrm_mot4x3_6can, 0, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 3);
+	motorGroup = new MotorGroupStar(mrm_mot4x3_6can, 0, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 3);
 
 	// LED signs to be assigned to different actions follow. It is easier to follow action flow by checking the display.
 
@@ -74,43 +75,32 @@ RobotSoccer::RobotSoccer(char name[]) : Robot(name) {
 	// Actions
 	pidXY = new Mrm_pid(0.5, 100, 0); // PID controller, regulates motors' speeds for linear motion in the x-y plane: 4, 100, 0 - ok.
 	pidRotation = new Mrm_pid(2.0, 100, 0); // PID controller, regulates rotation around z axis
-	actionPlay = new ActionSoccerPlay(this);
-	actionBounce = new ActionSoccerBounce(this, signBounce);
-	actionCalibrate = new ActionSoccerCalibrate(this, signCalibrate);
-	actionCatch = new ActionSoccerCatch(this, signCatch);
-	actionGoalApproach = new ActionSoccerGoalApproach(this, signGoalApproach);
-	actionIdle = new ActionSoccerIdle(this, signIdle);
-	actionLineAvoid = new ActionSoccerLineAvoid(this, signLineAvoid);
-	actionLoop0 = new ActionSoccerLoop0(this);
-	actionLoop1 = new ActionSoccerLoop1(this);
-	actionLoop2 = new ActionSoccerLoop2(this);
-	actionLoop3 = new ActionSoccerLoop3(this);
-	actionLoop4 = new ActionSoccerLoop4(this);
+
+	actions->insert({"soc", new ActionRobotSoccer(this, "Soccer play", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::play)});
+	actions->insert({"bou", new ActionRobotSoccer(this, "Soccer bounce", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::bounce)});
+	actions->insert({"clb", new ActionRobotSoccer(this, "Soccer calibrate", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::calibrate)});
+	actions->insert({"cat", new ActionRobotSoccer(this, "Soccer catch", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::catchBall)});
+	actions->insert({"apr", new ActionRobotSoccer(this, "Soccer approach", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::goalApproach)});
+	actions->insert({"idl", new ActionRobotSoccer(this, "Soccer idle", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::idle)});
+	actions->insert({"avo", new ActionRobotSoccer(this, "Soccer line avoid", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::lineAvoid)});
+	actions->insert({"bar", new ActionRobotSoccer(this, "Soccer barrier test", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::barrierTest)});
+
 
 	// The actions that should be displayed in menus must be added to menu-callable actions. You can use action-objects defined
 	// right above, or can create new objects. In the latter case, the inline-created objects will have no pointer and cannot be
 	// called in the code, but only through menus. For example, ActionWallsTest test is only manu-based, and it is all right.
 	// This test is not supposed to be called in code.
-	actionAdd(actionBounce);
-	actionAdd(actionCalibrate);
-	actionAdd(actionPlay);
-	actionAdd(new ActionSoccerBarrierTest(this));
-	actionAdd(actionLoop0);
-	actionAdd(actionLoop1);
-	actionAdd(actionLoop2);
-	actionAdd(actionLoop3);
 
-	// mrm_mot4x3_6can->directionChange(0); // Uncomment to change 1st wheel's rotation direction
-	// mrm_mot4x3_6can->directionChange(1); // Uncomment to change 2nd wheel's rotation direction
-	// mrm_mot4x3_6can->directionChange(2); // Uncomment to change 3rd wheel's rotation direction
-	// mrm_mot4x3_6can->directionChange(3); // Uncomment to change 4th wheel's rotation direction
+	// mrm_mot4x3_6can->directionChange(mrm_mot4x3_6can->devices[0]); // Uncomment to change 1st wheel's rotation direction
+	// mrm_mot4x3_6can->directionChange(mrm_mot4x3_6can->devices[1]); // Uncomment to change 2nd wheel's rotation direction
+	// mrm_mot4x3_6can->directionChange(mrm_mot4x3_6can->devices[2]); // Uncomment to change 3rd wheel's rotation direction
+	// mrm_mot4x3_6can->directionChange(mrm_mot4x3_6can->devices[3]); // Uncomment to change 4th wheel's rotation direction
 
 	// Buttons
-	mrm_8x8a->actionSet(actionPlay, 0); // Button 1 starts the play
-	mrm_8x8a->actionSet(actionBounce, 1); // Button 2 starts user defined bounce() function
-	mrm_8x8a->actionSet(_actionLoop, 2); // Button 3 starts user defined loop() function
-	// mrm_8x8a->actionSet(actionCalibrate, 2);
-	mrm_8x8a->actionSet(_actionMenuMain, 3); // Button 4 stops the robot and prints main manu
+	mrm_8x8a->actionSet(actionFind("soc"), 0); // Button 1 starts the play
+	mrm_8x8a->actionSet(actionFind("bou"), 1); // Button 2 starts user defined bounce() function
+	mrm_8x8a->actionSet(actionFind("loo"), 2); // Button 3 starts user defined loop() function
+	mrm_8x8a->actionSet(actionFind("men"), 3); // Button 4 stops the robot and prints main manu
 
 	// Set number of phototransistors in each line sensor.
 	mrm_ref_can->transistorCountSet(5, 0); // 5 instead of 6 since IR ball interferes with 6th transistor.
@@ -171,7 +161,7 @@ void RobotSoccer::bounce(){
 	}
 
 	if (AVOID_LINE && lineAny()){
-		actionSet(actionLineAvoid);
+		actionSet("avo");
 		if (mrm_ref_can->any(false, 0)) // Front
 			directionCurrent = headingRandom(-180, VARIATION);
 		if (mrm_ref_can->any(false, 1)) // Right
@@ -249,9 +239,9 @@ void RobotSoccer::calibrate(){
 */
 void RobotSoccer::catchBall() {
 	if (lineAny())
-		actionSet(actionLineAvoid);
+		actionSet("avo");
 	else if (barrier())
-		actionSet(actionGoalApproach);
+		actionSet("apr");
 	else if (mrm_ir_finder3->distance() > 100) {
 		float direction = -mrm_ir_finder3->angle() - 10;
 		if (fabsf(direction) > 7)
@@ -260,7 +250,7 @@ void RobotSoccer::catchBall() {
 		print("Catch ball, angle: %i\n\r", (int)mrm_ir_finder3->angle());
 	}
 	else
-		actionSet(actionIdle);
+		actionSet("idl");
 }
 
 /** Front distance to wall
@@ -299,9 +289,9 @@ void RobotSoccer::goAhead() {
 */
 void RobotSoccer::goalApproach(){
 	if (lineAny())
-		actionSet(actionLineAvoid);
+		actionSet("avo");
 	else if (!barrier())
-		actionSet(actionIdle);
+		actionSet("idl");
 	else{
 		float errorL = SOCCER_SIDE_DISTANCE_WHEN_CENTERED - left();
 		float errorR = right() - SOCCER_SIDE_DISTANCE_WHEN_CENTERED;
@@ -334,9 +324,9 @@ float RobotSoccer::headingRandom(int heading, int variation){
 */
 void RobotSoccer::idle() {
 	if (lineAny())
-		actionSet(actionLineAvoid);
+		actionSet("avo");
 	else if (mrm_ir_finder3->distance() > 50)
-		actionSet(actionCatch);
+		actionSet("cat");
 	else {
 		float errorL = SOCCER_SIDE_DISTANCE_WHEN_CENTERED - left();
 		float errorR = right() - SOCCER_SIDE_DISTANCE_WHEN_CENTERED;
@@ -433,12 +423,12 @@ void RobotSoccer::lineAvoid(){
 			print("Escaped\n\r");
 			lineLeft = TriState::Unknown;
 			lineFront = TriState::Unknown;
-			actionSet(actionIdle);
+			actionSet("idl");
 			//actionSet(actionBounce);
 		}
 	}
 	else
-		actionSet(actionIdle), print("False line");
+		actionSet("idl"), print("False line");
 		//actionSet(actionBounce), print("False line");
 }
 
@@ -456,13 +446,13 @@ void RobotSoccer::loop() {
 
 /** Generic actions, use them as templates
 */
-void RobotSoccer::loop0() { speedY += 5, actionSet(actionLoop4);} // Forward
+void RobotSoccer::loop0() { speedY += 5, actionSet("lo4");} // Forward
 
-void RobotSoccer::loop1() { speedY -= 5, actionSet(actionLoop4);} // Backward
+void RobotSoccer::loop1() { speedY -= 5, actionSet("lo4");} // Backward
 
-void RobotSoccer::loop2() { speedX -= 5, actionSet(actionLoop4);} // Left
+void RobotSoccer::loop2() { speedX -= 5, actionSet("lo4");} // Left
 
-void RobotSoccer::loop3() { speedX += 5, actionSet(actionLoop4);} // Right
+void RobotSoccer::loop3() { speedX += 5, actionSet("lo4");} // Right
 
 void RobotSoccer::loop4() {
 	const int MAX_SPEED = 30;
@@ -490,7 +480,7 @@ void RobotSoccer::play() {
 	}
 	headingToMaintain = mrm_imu->heading();
 	print("Yaw: %i\n\r", (int)headingToMaintain);
-	actionSet(actionIdle);
+	actionSet("idl");
 	//actionSet(actionBounce);
 }
 

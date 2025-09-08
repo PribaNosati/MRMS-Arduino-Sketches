@@ -1,4 +1,6 @@
 #pragma once
+#include <Insights.h>
+#include <Interfaces.h>
 #include <mrm-action.h>
 #include <mrm-robot.h>
 
@@ -37,26 +39,12 @@ class ActionRobotLine;
 /** Robot for RCJ Rescue Line, a class derived from the base Robot class.
 */
 class RobotLine : public Robot {
+	DistanceInterface* distanceInterface = NULL;
 	uint16_t BIGGEST_GAP_IN_LINE_MS = 2500;
 	// Changing this parameter will cause major behaviour change. Limit value: 127.
 	const uint8_t TOP_SPEED = 90; // 7.4 V 80	11.1 V 60
 	const uint16_t AHEAD_IN_CROSSING = 210; // 7.4V : 300
 	const uint8_t LAST_TRANSISTOR = 7; // mrm-ref-can: 8, mrm-ref-can8: 7
-
-	// Actions' declarations
-	ActionRobotLine* actionEvacuationZone;
-	ActionRobotLine* actionObstacleAvoid;
-	ActionRobotLine* actionLineFollow;
-	ActionRobotLine* actionRCJLine;
-	ActionRobotLine* actionStop; // Robot function
-	ActionRobotLine* actionMotorShortTest;
-
-	// Generic actions
-	ActionRobotLine* actionLoop5;
-	ActionRobotLine* actionLoop6;
-	ActionRobotLine* actionLoop7;
-	ActionRobotLine* actionLoop8;
-	ActionRobotLine* actionLoop9;
 
 	uint16_t barrierBrightest = 2000; // Default value, it should be calibrated.
 
@@ -103,7 +91,7 @@ public:
 	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
 	@return - intensity of blue
 	 */
-	uint16_t blue(uint8_t deviceNumber = 0){return mrm_col_can->colorGreen(deviceNumber);}
+	uint16_t blue(uint8_t deviceNumber = 0){return mrm_col_can->colorBlue(mrm_col_can->devices[deviceNumber]);}
 
 	/** Line sensor - brightness of the surface
 	@param transistorNumber - starts from 0 and end value depends on sensor. Usually 7 (for mrm-ref-can8) or 8 (for mrm-ref-can9).
@@ -242,7 +230,7 @@ public:
 	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
 	@return - intensity of green
 	 */
-	uint16_t green(uint8_t deviceNumber = 0){return mrm_col_can->colorGreen(deviceNumber);}
+	uint16_t green(uint8_t deviceNumber = 0){return mrm_col_can->colorGreen(mrm_col_can->devices[deviceNumber]);}
 
 	/** Color sensor's hue
 	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
@@ -285,7 +273,7 @@ public:
 	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
 	@return - intensity of orange
 	 */
-	uint16_t orange(uint8_t deviceNumber = 0){return mrm_col_can->colorOrange(deviceNumber);}
+	uint16_t orange(uint8_t deviceNumber = 0){return mrm_col_can->colorOrange(mrm_col_can->devices[deviceNumber]);}
 
 	/** Choose a pattern closest to the current 6 colors
 	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
@@ -302,7 +290,7 @@ public:
 	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
 	@return - intensity of red
 	 */
-	uint16_t red(uint8_t deviceNumber = 0){return mrm_col_can->colorRed(deviceNumber);}
+	uint16_t red(uint8_t deviceNumber = 0){return mrm_col_can->colorRed(mrm_col_can->devices[deviceNumber]);}
 
 	/** Front side - right distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
 	@param sampleCount - Number or readings. 40% of the readings, with extreme values, will be discarded and the
@@ -373,7 +361,7 @@ public:
 	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
 	@return - intensity of violet
 	 */
-	uint16_t violet(uint8_t deviceNumber = 0){return mrm_col_can->colorViolet(deviceNumber);}
+	uint16_t violet(uint8_t deviceNumber = 0){return mrm_col_can->colorViolet(mrm_col_can->devices[deviceNumber]);}
 
 	/** Follows a wall.
 	*/
@@ -393,7 +381,7 @@ public:
 	@param deviceNumber - Device's ordinal number. Each call of function add() assigns a increasing number to the device, starting with 0.
 	@return - intensity of yellow
 	 */
-	uint16_t yellow(uint8_t deviceNumber = 0){return mrm_col_can->colorYellow(deviceNumber);}
+	uint16_t yellow(uint8_t deviceNumber = 0){return mrm_col_can->colorYellow(mrm_col_can->devices[deviceNumber]);}
 };
 
 /** Actions serve a few purposes.
@@ -421,7 +409,7 @@ The fourth pareameter is menu level. When omitted, the action will not be a part
 class ActionRobotLine : public ActionBase {
 	void perform(){(((RobotLine*)_robot)->*_actionPerform)(); };
 public:
-	ActionRobotLine(Robot* robot, const char shortcut[4], const char text[20], uint8_t menuLevel = 1, Board::BoardId boardsId = Board::BoardId::ID_ANY,
+	ActionRobotLine(Robot* robot, const char text[20], uint8_t menuLevel = 1, Board::BoardId boardsId = Board::BoardId::ID_ANY,
 		Mrm_8x8a::LEDSign* ledSign8x8 = NULL,  void (RobotLine::*actionPerform)() = NULL) : 
-		ActionBase(robot, shortcut, text, menuLevel, boardsId, ledSign8x8, (void (Robot::*)())actionPerform) {}
+		ActionBase(robot, text, menuLevel, boardsId, ledSign8x8, (void (Robot::*)())actionPerform) {}
 };

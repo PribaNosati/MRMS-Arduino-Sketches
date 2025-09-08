@@ -20,37 +20,29 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 	// 2nd, 4th, 6th, and 8th parameters are output connectors of the controller (number 0 - 3, meaning 1. - 4. connector). 
 	// 2nd one must be connected to LB (Left-Back) motor, 4th to LF (Left-Front), 6th to RF (Right-Front), and 8th to RB (Right-Back). 
 	// Therefore, You can connect motors freely, but have to adjust the parameters here. In this example output (connector) 0 is LB, etc.
-	motorGroup = new MotorGroupDifferential(this, mrm_mot4x3_6can, 0, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 3);
+	motorGroup = new MotorGroupDifferential(mrm_mot4x3_6can, 0, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 3);
+	motorGroup->delayMs = [this](uint16_t pauseMs){delayMs(pauseMs);}; //To avoid back-pointer
+
+	distanceInterface = mrm_lid_can_b; // We will program using interface instead of implementation
 
 	Mrm_8x8a::LEDSignText* signTest = new Mrm_8x8a::LEDSignText();
 
 	// All the actions that sholuld be called from code will be defined here; the callable objects will be created.
-	actionEvacuationZone = new ActionRobotLine(this, "eva", "Evacuation zone", 1, Board::BoardId::ID_ANY, NULL, &RobotLine::evacuationZone);
-	actionLineFollow = new ActionRobotLine(this, "lnf", "Line follow", 1, Board::BoardId::ID_ANY, NULL, &RobotLine::lineFollow);
-	actionObstacleAvoid = new ActionRobotLine(this, "obs", "Obstacle avoid", 0, Board::BoardId::ID_ANY, NULL, &RobotLine::obstacleAvoid);
-	actionRCJLine = new ActionRobotLine(this, "lin", "RCJ line", 1, Board::BoardId::ID_ANY, NULL, &RobotLine::rcjLine);
-	actionStop = new ActionRobotLine(this, "sto", "Stop", 1, Board::BoardId::ID_ANY, NULL, &RobotLine::stop);
-	actionMotorShortTest = new ActionRobotLine(this, "msh", "Motor short test", 1, Board::BoardId::ID_ANY, NULL, &RobotLine::motorShortTest);
-	// Generic actions
-	actionLoop5 = new ActionRobotLine(this, "lo5", "loop5", 8, Board::BoardId::ID_ANY, signTest, &RobotLine::loop5);
-	actionLoop6 = new ActionRobotLine(this, "lo6", "loop6", 8, Board::BoardId::ID_ANY, signTest, &RobotLine::loop6);
-	actionLoop7 = new ActionRobotLine(this, "lo7", "loop6", 8, Board::BoardId::ID_ANY, signTest, &RobotLine::loop7);
-	actionLoop8 = new ActionRobotLine(this, "lo8", "loop8", 8, Board::BoardId::ID_ANY, signTest, &RobotLine::loop8);
-	actionLoop9 = new ActionRobotLine(this, "lo9", "loop9", 8, Board::BoardId::ID_ANY, signTest, &RobotLine::loop9);
+	actions->insert({"eva", new ActionRobotLine(this, "Evacuation zone", 1, Board::BoardId::ID_ANY, NULL, &RobotLine::evacuationZone)});
+	actions->insert({"lnf", new ActionRobotLine(this, "Line follow", 1, Board::BoardId::ID_ANY, NULL, &RobotLine::lineFollow)});
+	actions->insert({"obs", new ActionRobotLine(this, "Obstacle avoid", 0, Board::BoardId::ID_ANY, NULL, &RobotLine::obstacleAvoid)});
+	actions->insert({"rcj", new ActionRobotLine(this, "RCJ line", 1, Board::BoardId::ID_ANY, NULL, &RobotLine::rcjLine)});
+	actions->insert({"str", new ActionRobotLine(this, "Stop motors", 1, Board::BoardId::ID_ANY, NULL, &RobotLine::stop)});
+	actions->insert({"msh", new ActionRobotLine(this, "Motor short test", 1, Board::BoardId::ID_ANY, NULL, &RobotLine::motorShortTest)});
+	actions->insert({"lo5", new ActionRobotLine(this, "loop5", 8, Board::BoardId::ID_ANY, signTest, &RobotLine::loop5)});
+	actions->insert({"lo6", new ActionRobotLine(this, "loop6", 8, Board::BoardId::ID_ANY, signTest, &RobotLine::loop6)});
+	actions->insert({"lo7", new ActionRobotLine(this, "loop7", 8, Board::BoardId::ID_ANY, signTest, &RobotLine::loop7)});
+	actions->insert({"lo8", new ActionRobotLine(this, "loop8", 8, Board::BoardId::ID_ANY, signTest, &RobotLine::loop8)});
+	actions->insert({"lo9", new ActionRobotLine(this, "loop9", 8, Board::BoardId::ID_ANY, signTest, &RobotLine::loop9)});
 
 	// The actions that should be displayed in menus must be added to menu-callable actions. You can use action-objects defined
 	// right above, or can create new objects. In the latter case, the inline-created objects will have no pointer and cannot be
 	// called in the code, but only through menus.
-	actionAdd(actionEvacuationZone);
-	actionAdd(actionLineFollow);
-	actionAdd(actionObstacleAvoid);
-	actionAdd(actionRCJLine);
-	actionAdd(actionMotorShortTest);
-	actionAdd(actionLoop5);
-	actionAdd(actionLoop6);
-	actionAdd(actionLoop7);
-	actionAdd(actionLoop8);
-	actionAdd(actionLoop9);
 
 #define CUSTOMIZE_SERVO 0
 #if CUSTOMIZE_SERVO
@@ -70,16 +62,16 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 	// Set buttons' actions.
 	// mrm_8x8a->actionSet(actionRCJLine, 0); // Button 1 starts RCJ Line.
 	// mrm_8x8a->actionSet(actionEvacuationZone, 1); // Button 2 starts robot in evacution zone.
-	mrm_8x8a->actionSet(_actionLoop, 2); // Button 3 starts user defined loop() function
-	mrm_8x8a->actionSet(actionStop, 3); // Stop the robot
+	mrm_8x8a->actionSet(actionFind("loo"), 2); // Button 3 starts user defined loop() function
+	mrm_8x8a->actionSet(actionFind("sto"), 3); // Stop the robot
 
 	// Put Your buttons' actions here.
 
 	// Depending on your wiring, it may be necessary to spin some motors in the other direction. 
-	mrm_mot4x3_6can->directionChange(0); // Uncomment to change 1st wheel's rotation direction
-	mrm_mot4x3_6can->directionChange(1); // Uncomment to change 2nd wheel's rotation direction
-	mrm_mot4x3_6can->directionChange(2); // Uncomment to change 3rd wheel's rotation direction
-	mrm_mot4x3_6can->directionChange(3); // Uncomment to change 4th wheel's rotation direction
+	mrm_mot4x3_6can->directionChange(mrm_mot4x3_6can->devices[0]); // Uncomment to change 1st wheel's rotation direction
+	mrm_mot4x3_6can->directionChange(mrm_mot4x3_6can->devices[1]); // Uncomment to change 2nd wheel's rotation direction
+	mrm_mot4x3_6can->directionChange(mrm_mot4x3_6can->devices[2]); // Uncomment to change 3rd wheel's rotation direction
+	mrm_mot4x3_6can->directionChange(mrm_mot4x3_6can->devices[3]); // Uncomment to change 4th wheel's rotation direction
 
 	// Digital switches connected to ESP32 pins
 	// pinMode(25, INPUT_PULLDOWN);
@@ -144,7 +136,7 @@ bool RobotLine::barrier() {
 /** Stores bitmaps in mrm-led8x8a.
 */
 void RobotLine::bitmapsSet() {
-	mrm_8x8a->alive(0, true); // Makes sure that mrm-8x8a is present and functioning. If not, issues a warning message.
+	mrm_8x8a->aliveWithOptionalScan(0, true); // Makes sure that mrm-8x8a is present and functioning. If not, issues a warning message.
 
 	const std::vector<Mrm_8x8a::ledSign> selectedImages = {Mrm_8x8a::LED_CUSTOM, Mrm_8x8a::LED_EVACUATION_ZONE, Mrm_8x8a::LED_FULL_CROSSING_BOTH_MARKS,  
 	Mrm_8x8a::LED_FULL_CROSSING_MARK_LEFT, Mrm_8x8a::LED_FULL_CROSSING_MARK_RIGHT, Mrm_8x8a::LED_FULL_CROSSING_NO_MARK,
@@ -277,7 +269,7 @@ void RobotLine::evacuationZone() {
 @return - distance in mm
 */
 uint16_t RobotLine::front(uint8_t sampleCount, uint8_t sigmaCount) {
-	return mrm_lid_can_b->distance(1, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
+	return distanceInterface->distance(1, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Front side - left distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
@@ -289,7 +281,7 @@ uint16_t RobotLine::front(uint8_t sampleCount, uint8_t sigmaCount) {
 @return - distance in mm
 */
 uint16_t RobotLine::frontLeft(uint8_t sampleCount, uint8_t sigmaCount) {
-	return mrm_lid_can_b->distance(0, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
+	return distanceInterface->distance(0, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Front side - left distance in cm, using ultrasonic sensor.
@@ -308,7 +300,7 @@ uint16_t RobotLine::frontLeftUS() {
 @return - distance in mm
 */
 uint16_t RobotLine::frontRight(uint8_t sampleCount, uint8_t sigmaCount) {
-	return mrm_lid_can_b->distance(2, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
+	return distanceInterface->distance(2, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Start motors
@@ -333,7 +325,7 @@ void RobotLine::goAhead() {
 @return - Hue
 */
 uint8_t RobotLine::hue(uint8_t deviceNumber) {
-	return mrm_col_can->hue(deviceNumber);
+	return mrm_col_can->hue(&mrm_col_can->devices[deviceNumber]);
 }
 
 /** Set color sensor's illumination intensity
@@ -341,7 +333,7 @@ uint8_t RobotLine::hue(uint8_t deviceNumber) {
 @param current - 0 - 3
 */
 void RobotLine::illumination(uint8_t current, uint8_t deviceNumber) {
-	return mrm_col_can->illumination(deviceNumber, current);
+	return mrm_col_can->illumination(&mrm_col_can->devices[deviceNumber], current);
 }
 
 /** Left side - rear sensor distance.
@@ -353,7 +345,7 @@ void RobotLine::illumination(uint8_t current, uint8_t deviceNumber) {
 @return - in mm
 */
 uint16_t RobotLine::leftBack(uint8_t sampleCount, uint8_t sigmaCount) {
-	return mrm_lid_can_b->distance(4, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
+	return distanceInterface->distance(4, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Left side - front sensor distance.
@@ -365,7 +357,7 @@ uint16_t RobotLine::leftBack(uint8_t sampleCount, uint8_t sigmaCount) {
 @return - in mm
 */
 uint16_t RobotLine::leftFront(uint8_t sampleCount, uint8_t sigmaCount) {
-	return mrm_lid_can_b->distance(0, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
+	return distanceInterface->distance(0, sampleCount, sigmaCount); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Line found?
@@ -487,14 +479,23 @@ void RobotLine::lineFollow() {
 /** Custom test. The function will be called many times during the test, till You issue "x" menu command.
 */
 void RobotLine::loop() {
-	if (frontLeft() < 100 or front() < 100)
-		stop();
-	else if (line(5))
-			go(10, 80);
-		else if (line(3))
-			go(80, 10);
-		else
-			go(60, 60);
+	uint32_t ms = millis();
+	int cnt = 0;
+	int empty = 0;
+	while (millis() < ms + 5000){
+		uint8_t data[] = {0xFF, 0, 0, 0, 0, 0, 0, 0};
+		mrm_can_bus->messageSend(0x200, 1, data);
+		while (true){
+			_msg = mrm_can_bus->messageReceive();
+			if (_msg != nullptr &&_msg->data[0] == 0xFF)
+				break;
+			else
+				empty++;
+		}
+		cnt++;
+	}
+	print("End %i, empty %i/n/r", cnt, empty);
+	end();
 }
 
 /** Generic actions, use them as templates
@@ -524,7 +525,16 @@ void RobotLine::loop6() {
 		else
 			go(60, 60);
 }
-void RobotLine::loop7() { }
+void RobotLine::loop7() { 
+	if (mrm_lid_can_b2->distance(1) > 100 && mrm_lid_can_b2->distance(6) > 100)
+		go(50, 50);
+	else if (mrm_lid_can_b2->distance(0) > 100)
+		go (50, -50);
+	else if (mrm_lid_can_b2->distance(7) > 100)
+		go (-50, 50);
+	else
+		go (-50, -50);
+}
 void RobotLine::loop8() { }
 void RobotLine::loop9() { }
 
@@ -544,8 +554,8 @@ bool RobotLine::markers() {
 	delayMs(200);
 	//bool greenLeft = mrm_col_can->patternRecognizedBy6Colors(0) == 2; // This function returns laerned pattern's number, for sensor 0 (left). Learned pattern 2 is green.
 	//bool greenRight = mrm_col_can->patternRecognizedBy6Colors(1) == 2; // This function returns laerned pattern's number, for sensor 0 (left). Learned pattern 2 is green.
-	bool greenLeft = mrm_col_can->value(0) < 70 && mrm_col_can->hue(0) > 60 && mrm_col_can->hue(0) < 70;
-	bool greenRight = mrm_col_can->value(1) < 70 && mrm_col_can->hue(1) > 60 && mrm_col_can->hue(1) < 70;
+	bool greenLeft = mrm_col_can->value(mrm_col_can->devices[0]) < 70 && mrm_col_can->hue(&mrm_col_can->devices[0]) > 60 && mrm_col_can->hue(&mrm_col_can->devices[0]) < 70;
+	bool greenRight = mrm_col_can->value(mrm_col_can->devices[1]) < 70 && mrm_col_can->hue(&mrm_col_can->devices[1]) > 60 && mrm_col_can->hue(&mrm_col_can->devices[1]) < 70;
 
 	bool fullLineL = !lineAny(4, 7);
 	bool fullLineR = !lineAny(0, 3);
@@ -681,7 +691,7 @@ void RobotLine::obstacleAvoid() {
 @raturn - patternNumber
 */
 uint8_t RobotLine::patternColors(uint8_t deviceNumber) {
-	return mrm_col_can->patternRecognizedBy6Colors(deviceNumber);
+	return mrm_col_can->patternRecognizedBy6Colors(mrm_col_can->devices[deviceNumber]);
 }
 
 
@@ -695,9 +705,9 @@ void RobotLine::rcjLine() {
 	mrm_8x8a->rotationSet(Mrm_8x8a::LED_8X8_BY_90_DEGREES); // Rotate the mrm-8x8a by 90� so that it can be read properly when standing behind the robot.
 	bitmapsSet(); // Upload all the predefined bitmaps into the mrm-8x8a.
 	display(LED_PLAY); // Show "play" sign.
-	mrm_col_can->illumination(0xFF, 1); // Turn mrm-col-can's surface illumination on.
+	mrm_col_can->illumination(nullptr, 1); // Turn mrm-col-can's surface illumination on.
 	//armClose(); // Arm will go to its idle (up) position.
-	actionSet(actionLineFollow); // The next action is line following.
+	actionSet("lnf"); // The next action is line following.
 }
 
 /** Front distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
@@ -709,7 +719,7 @@ void RobotLine::rcjLine() {
 @return - distance in mm
 */
 uint16_t RobotLine::rightBack(uint8_t sampleCount, uint8_t sigmaCount) {
-	return mrm_lid_can_b->distance(3); // Correct all sensors so that they return the same value for the same physical distance.
+	return distanceInterface->distance(3); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 /** Front distance in mm. Warning - the function will take considerable amount of time to execute if sampleCount > 0!
@@ -721,7 +731,7 @@ uint16_t RobotLine::rightBack(uint8_t sampleCount, uint8_t sigmaCount) {
 @return - distance in mm
 */
 uint16_t RobotLine::rightFront(uint8_t sampleCount, uint8_t sigmaCount) {
-	return mrm_lid_can_b->distance(2); // Correct all sensors so that they return the same value for the same physical distance.
+	return distanceInterface->distance(2); // Correct all sensors so that they return the same value for the same physical distance.
 }
 
 
@@ -730,7 +740,7 @@ uint16_t RobotLine::rightFront(uint8_t sampleCount, uint8_t sigmaCount) {
 @return - saturation.
 */
 uint8_t RobotLine::saturation(uint8_t deviceNumber) {
-	return mrm_col_can->saturation(deviceNumber);
+	return mrm_col_can->saturation(&mrm_col_can->devices[deviceNumber]);
 }
 
 /** Move servo
@@ -738,7 +748,7 @@ uint8_t RobotLine::saturation(uint8_t deviceNumber) {
 @param servoNumber - Servo's ordinal number. Each call of function add() assigns a increasing number to the servo, starting with 0.
 */
 void RobotLine::servo(uint16_t degrees, uint8_t servoNumber){
-	return mrm_servo->write(degrees, servoNumber);
+	mrm_servo->write(degrees, servoNumber);
 }
 
 /** Display fixed sign stored in sensor
@@ -752,6 +762,7 @@ void RobotLine::sign(uint8_t number) {
 */
 void RobotLine::stop() {
 	motorGroup->stop();
+	end();
 }
 
 /** Store 8x8 image to 8x8 LED's internal memory
@@ -769,10 +780,10 @@ void RobotLine::store(uint8_t red[], uint8_t green[], uint8_t image) {
 @param delayMsAfterPrint - delay after print
 */
 void RobotLine::surfacePrint(bool newLine, uint16_t delayMsAfterPrint) {
-	print("%i/%i/%i ", mrm_col_can->hue(0), mrm_col_can->saturation(0), mrm_col_can->value(0));
+	print("%i/%i/%i ", mrm_col_can->hue(&mrm_col_can->devices[0]), mrm_col_can->saturation(&mrm_col_can->devices[0]), mrm_col_can->value(mrm_col_can->devices[0]));
 	for (int8_t i = LAST_TRANSISTOR; i >= 0; i--)
 		print("%i", line(i));
-	print(" %i/%i/%i ", mrm_col_can->hue(1), mrm_col_can->saturation(1), mrm_col_can->value(1));
+	print(" %i/%i/%i ", mrm_col_can->hue(&mrm_col_can->devices[1]), mrm_col_can->saturation(&mrm_col_can->devices[1]), mrm_col_can->value(mrm_col_can->devices[1]));
 	if (newLine)
 		print("\n\r");
 	if (delayMsAfterPrint != 0)
@@ -804,7 +815,7 @@ void RobotLine::turn(int16_t byDegreesClockwise) {
 @return - value
 */
 uint8_t RobotLine::value(uint8_t deviceNumber) {
-	return mrm_col_can->value(deviceNumber);
+	return mrm_col_can->value(mrm_col_can->devices[deviceNumber]);
 }
 
 #if LIDAR_COUNT == 6

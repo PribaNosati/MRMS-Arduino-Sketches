@@ -22,20 +22,6 @@ class ActionSoccerLoop4;
 class RobotSoccer : public Robot {
 	enum TriState{Yes, Opposite, Unknown};
 
-	// Actions' declarations
-	ActionBase* actionBounce;
-	ActionBase* actionCalibrate;
-	ActionBase* actionCatch;
-	ActionBase* actionGoalApproach;
-	ActionBase* actionIdle;
-	ActionBase* actionLineAvoid;
-	ActionSoccerLoop0* actionLoop0;
-	ActionSoccerLoop1* actionLoop1;
-	ActionSoccerLoop2* actionLoop2;
-	ActionSoccerLoop3* actionLoop3;
-	ActionSoccerLoop4* actionLoop4;
-	ActionBase* actionPlay;
-
 	float headingToMaintain; // Heading towards opponent's goal.
 	MotorGroupStar* motorGroup;  // Class that conveys commands to motors.
 	Mrm_pid* pidXY; // PID controller, regulates motors' speeds for linear motion in the x-y plane.
@@ -215,95 +201,10 @@ for no-menu actions.
 The fourth pareameter is menu level. When omitted, the action will not be a part of the menu. Use 1 otherwise. Higher level numbers will display the action in submenues, not used here.
 */
 
-class ActionSoccerLoop0 : public ActionBase {
-	void perform() { ((RobotSoccer*)_robot)->loop0(); }
+class ActionRobotSoccer : public ActionBase {
+	void perform(){(((RobotSoccer*)_robot)->*_actionPerform)(); };
 public:
-	ActionSoccerLoop0(RobotSoccer* robot) : ActionBase(robot, "lo0", "Loop 0", 8) {}
-};
-
-class ActionSoccerLoop1 : public ActionBase {
-	void perform() { ((RobotSoccer*)_robot)->loop1(); }
-public:
-	ActionSoccerLoop1(RobotSoccer* robot) : ActionBase(robot, "lo1", "Loop 1", 8) {}
-};
-
-class ActionSoccerLoop2 : public ActionBase {
-	void perform() { ((RobotSoccer*)_robot)->loop2(); }
-public:
-	ActionSoccerLoop2(RobotSoccer* robot) : ActionBase(robot, "lo2", "Loop 2", 8) {}
-};
-
-class ActionSoccerLoop3 : public ActionBase {
-	void perform() { ((RobotSoccer*)_robot)->loop3(); }
-public:
-	ActionSoccerLoop3(RobotSoccer* robot) : ActionBase(robot, "lo3", "Loop 3", 8) {}
-};
-
-class ActionSoccerLoop4 : public ActionBase {
-	void perform() { ((RobotSoccer*)_robot)->loop4(); }
-public:
-	ActionSoccerLoop4(RobotSoccer* robot) : ActionBase(robot, "lo4", "Loop 3", 8) {}
-};
-
-/** Bounce
-*/
-class ActionSoccerBounce : public ActionBase {
-	void perform() { ((RobotSoccer*)_robot)->bounce(); }
-public:
-	ActionSoccerBounce(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "bou", "Soccer bounce", 1, Board::ID_ANY, ledSign) {}
-};
-
-/** Test barrier.
-*/
-class ActionSoccerBarrierTest : public ActionBase {
-	void perform() { ((RobotSoccer*)_robot)->barrierTest(); }
-public:
-	ActionSoccerBarrierTest(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "bar", "Soccer barr. test", 1, Board::ID_ANY, ledSign) {}
-};
-
-/** Calibrating all the line sensors
-*/
-class ActionSoccerCalibrate : public ActionBase {
-	void perform() { ((RobotSoccer*)_robot)->calibrate(); }
-public:
-	ActionSoccerCalibrate(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "clb", "Soccer calibrate", 1, Board::ID_ANY, ledSign) {}
-};
-
-
-/** Go around the ball and approach it.
-*/
-class ActionSoccerCatch : public ActionBase {
-	void perform() { ((RobotSoccer*)_robot)->catchBall(); }
-public:
-	ActionSoccerCatch(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "cat", "Soccer catch", 0, Board::ID_ANY, ledSign) {}
-};
-
-/** Go to goal
-*/
-class ActionSoccerGoalApproach : public ActionBase {
-	void perform() { ((RobotSoccer*)_robot)->goalApproach(); }
-public:
-	ActionSoccerGoalApproach(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "apr", "Soccer approach", 0, Board::ID_ANY, ledSign) {}
-};
-
-/** Starts robot.
-*/
-class ActionSoccerPlay : public ActionBase {
-	void perform(){ ((RobotSoccer*)_robot)->play(); }
-public:
-	ActionSoccerPlay(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "soc", "Soccer play") {}
-};
-
-/** Idle position, before own goal.
-*/
-class ActionSoccerIdle : public ActionBase {
-	void perform() { ((RobotSoccer*)_robot)->idle(); }
-public:
-	ActionSoccerIdle(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "idl", "Soccer idle", 0, Board::ID_ANY, ledSign) {}
-};
-
-class ActionSoccerLineAvoid : public ActionBase {
-	void perform() { ((RobotSoccer*)_robot)->lineAvoid(); }
-public:
-	ActionSoccerLineAvoid(RobotSoccer* robot, Mrm_8x8a::LEDSign* ledSign = NULL) : ActionBase(robot, "avo", "Soccer line avoid", 0, Board::ID_ANY, ledSign) {}
+	ActionRobotSoccer(Robot* robot, const char text[20], uint8_t menuLevel = 1, Board::BoardId boardsId = Board::BoardId::ID_ANY,
+		Mrm_8x8a::LEDSign* ledSign8x8 = NULL,  void (RobotSoccer::*actionPerform)() = NULL) : 
+		ActionBase(robot, text, menuLevel, boardsId, ledSign8x8, (void (Robot::*)())actionPerform) {}
 };

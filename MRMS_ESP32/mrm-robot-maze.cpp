@@ -24,38 +24,41 @@ RobotMaze::RobotMaze(char name[]) : Robot(name) {
 	// 2nd, 4th, 6th, and 8th parameters are output connectors of the controller (number 0 - 3, meaning 1. - 4. connector). 
 	// 2nd one must be connected to LB (Left-Back) motor, 4th to LF (Left-Front), 6th to RF (Right-Front), and 8th to RB (Right-Back). 
 	// Therefore, You can connect motors freely, but have to adjust the parameters here. In this example output (connector) 0 is LB, etc.
-	motorGroup = new MotorGroupDifferential(this, mrm_mot4x3_6can, 0, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 3);
+	motorGroup = new MotorGroupDifferential(mrm_mot4x3_6can, 0, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 3);
+	motorGroup->delayMs = [this](uint16_t pauseMs){delayMs(pauseMs);}; //To avoid back-pointer
+
+	distanceInteface = mrm_lid_can_b; // We will program using interface instead of implementation
 
 	// Depending on your wiring, it may be necessary to spin some motors in the other direction. In this example, no change needed,
 	// but uncommenting the following line will change the direction of the motor 2.
-	// mrm_mot4x3_6can->directionChange(0); // Uncomment to change 1st wheel's rotation direction
-	mrm_mot4x3_6can->directionChange(1); // Uncomment to change 2nd wheel's rotation direction
-	mrm_mot4x3_6can->directionChange(2); // Uncomment to change 3rd wheel's rotation direction
-	// mrm_mot4x3_6can->directionChange(3); // Uncomment to change 4th wheel's rotation direction
+	// mrm_mot4x3_6can->directionChange(mrm_mot4x3_6can->devices[0]); // Uncomment to change 1st wheel's rotation direction
+	mrm_mot4x3_6can->directionChange(mrm_mot4x3_6can->devices[1]); // Uncomment to change 2nd wheel's rotation direction
+	mrm_mot4x3_6can->directionChange(mrm_mot4x3_6can->devices[2]); // Uncomment to change 3rd wheel's rotation direction
+	// mrm_mot4x3_6can->directionChange(mrm_mot4x3_6can->devices[3]); // Uncomment to change 4th wheel's rotation direction
 
 	// All the actions will be defined here; the objects will be created.
-	actionDecide = new ActionDecide(this);
-	actionGoStraightAhead = new ActionMoveAhead(this);
-	actionMap = new ActionMap(this);
-	actionMove = new ActionMove(this);
-	actionMoveAhead = new ActionMoveAhead(this);
-	actionMoveTurn = new ActionMoveTurn(this);
-	actionRescueMaze = new ActionRescueMaze(this);
+/** Action that decides what to do next, using Tremaux algorithm. If a not-visited direction exists, go there. If not, return to the tile robot came from.*/
+	actions->insert({"mde", new ActionRobotMaze(this, "Decide", 1, Board::BoardId::ID_ANY, NULL, &RobotMaze::decide)});
+	/** Go straight ahead.*/
+	actions->insert({"mma", new ActionRobotMaze(this, "Move  ahead", 1, Board::BoardId::ID_ANY, NULL, &RobotMaze::moveAhead)});
+	/** Maps walls detected and other external readings in variables.*/
+	actions->insert({"mmp", new ActionRobotMaze(this, "Map", 1, Board::BoardId::ID_ANY, NULL, &RobotMaze::map)});
+	/** Base class for movement actions.	*/
+	actions->insert({"mmo", new ActionMove(this)});
+	actions->insert({"mmt", new ActionMoveTurn(this)});
+	actions->insert({"omn", new ActionRobotMaze(this, "Omni wheel test", 1, Board::BoardId::ID_ANY, NULL, &RobotMaze::omniWheelsTest)});
+	actions->insert({"wlt", new ActionRobotMaze(this, "Walls test", 1, Board::BoardId::ID_ANY, NULL, &RobotMaze::wallsTest)});
+	actions->insert({"rmz", new ActionRobotMaze(this, "Rescue Maze", 1, Board::BoardId::ID_ANY, NULL, &RobotMaze::rescueMaze)});
 
 	// The actions that should be displayed in menus must be added to menu-callable actions. You can use action-objects defined
 	// right above, or can create new objects. In the latter case, the inline-created objects will have no pointer and cannot be
 	// called in the code, but only through menus. For example, ActionWallsTest test is only manu-based, and it is all right.
 	// This test is not supposed to be called in code.
-	actionAdd(actionRescueMaze);
-	actionAdd(new ActionOmniWheelsTest(this));
-	actionAdd(new ActionWallsTest(this));
-	actionAdd(new ActionMove1TileTest(this));
-	actionAdd(new ActionMoveTurnTest(this));
 
 	// Set buttons' actions
-	mrm_8x8a->actionSet(actionRescueMaze, 0); // Button 0 starts RCJ Maze.
-	mrm_8x8a->actionSet(_actionLoop, 2); // Button 3 starts user defined loop() function
-	mrm_8x8a->actionSet(_actionStop, 3); // Stop the robot
+	// mrm_8x8a->actionSet(actionRescueMaze, 0); // Button 0 starts RCJ Maze.
+	mrm_8x8a->actionSet(actionFind("rmz"), 2); // Button 2 starts RCJ Maze.
+	mrm_8x8a->actionSet(actionFind("sto"), 3);
 
 	// Upload custom bitmaps into mrm-8x8a.
 	bitmapsSet();
@@ -75,7 +78,7 @@ uint32_t encoder2Count = 0;
 /** Store custom bitmaps in mrm-led8x8a.
 */
 void RobotMaze::bitmapsSet() {
-	mrm_8x8a->alive(0, true); // Makes sure that mrm-8x8a is present and functioning. If not, issues a warning message.
+	mrm_8x8a->aliveWithOptionalScan(0, true); // Makes sure that mrm-8x8a is present and functioning. If not, issues a warning message.
 	
 	const std::vector<Mrm_8x8a::ledSign> selectedImages = {Mrm_8x8a::LED_CUSTOM, Mrm_8x8a::LED_EVACUATION_ZONE, Mrm_8x8a::LED_FULL_CROSSING_BOTH_MARKS,  
 		Mrm_8x8a::LED_FULL_CROSSING_MARK_LEFT, Mrm_8x8a::LED_FULL_CROSSING_MARK_RIGHT, Mrm_8x8a::LED_FULL_CROSSING_NO_MARK,
@@ -95,7 +98,7 @@ If not, return to the tile robot came from.
 */
 void RobotMaze::decide(){
 	motorGroup->stop();
-	wallsDisplay(); // Use mrm-8x8a to display walls.
+	ActionMove* actionMove = (ActionMove*)actionFind("mmo");
 	//delayMs(5000);
 	actionMove->direction = Direction::NOWHERE; // Initialize direction.
 	for (uint8_t i = 0; i < 4; i++) {
@@ -169,7 +172,7 @@ In other words, first sensor is front-right and all the others must have increas
 @return - distance in mm.
 */
 uint16_t RobotMaze::distance(Direction direction, bool firstCCW) {
-	return mrm_lid_can_b->reading(2 * mToR(direction) + firstCCW); 
+	return distanceInteface->reading(2 * mToR(direction) + firstCCW); 
 }
 
 /** Increase encoder count
@@ -275,7 +278,7 @@ void RobotMaze::map() {
 				tileCurrent->wallSet(dir, WallStatus::NO_WALL); // Map empty space.
 		}
 	}
-	actionSet(actionDecide); // After mapping the next action will be a decision what to do.
+	actionSet("mde");  // After mapping the next action will be a decision what to do.
 	mazePrint(); // A debug tool: print all the maze after each map event.
 }
 
@@ -335,8 +338,10 @@ void RobotMaze::mazePrint() {
 /** Moves robot, either forward (moveAhead()) or by turning it (moveTurn()).
 */
 void RobotMaze::move() {
+	ActionMove* actionMove = (ActionMove*)actionFind("mmo");
 	if (actionMove->direction == directionCurrent) { // The robot is already in position where the next free way is right in front of it. Just go ahead.
 		print("Ahead\n\r");
+		ActionMove* actionMoveAhead = (ActionMove*)actionFind("mma");
 		actionSet(actionMoveAhead); // Set the next action: go straight ahead.
 		//actionMoveAhead->startMs = millis(); // Mark the start time.
 	}
@@ -344,6 +349,7 @@ void RobotMaze::move() {
 		int16_t delta = actionMove->direction - directionCurrent; // Target direction - start direction. A part of rotational angle determination procedure.
 		if (delta < 0)
 			delta += 4;
+		ActionMoveTurn* actionMoveTurn = (ActionMoveTurn*)actionFind("mmt");
 		actionMoveTurn->turnByCCW = 90 * delta; // This is the rotational angle.
 		print("Turn by %i CCW\n\r", (int)actionMoveTurn->turnByCCW); // For debugging.
 		actionMoveTurn->endAngle = mrm_imu->heading() - actionMoveTurn->turnByCCW; // Now find the end heading (angle).
@@ -367,6 +373,7 @@ void RobotMaze::moveAhead() {
 	static uint32_t startedAtMs;
 	if (setup())
 		startedAtMs = millis();
+	ActionMove* actionMoveAhead = (ActionMove*)actionFind("mma");
 	bool timeOver = millis() - startedAtMs > MOVE_AHEAD_TIMEOUT_MS;
 
 	// If any of the 3 conditions satisfied, break the movement: encoder, timeout, or a wall to close ahead.
@@ -391,13 +398,13 @@ void RobotMaze::moveAhead() {
 			if (targetTile != NULL) { // A tile found. That means we returned to the already visited tile.
 				print("tile exists\n\r"); // Debug.
 				tileCurrent = targetTile; // Set the position to the found tile.
-				actionSet(actionDecide); // Movement over. The next action will be decision what to do next. No mapping is needed here as the tile has already been mapped.
+				actionSet("mde");  // Movement over. The next action will be decision what to do next. No mapping is needed here as the tile has already been mapped.
 			}
 			else { // No such a tile. Therefore, this coordinate has not been visited yet. We have to create a new Tile object.
 				print("new tile\n\r");
 				// Set the position to a newly created tile, with new (x, y) coordinates. Breadcrumb direction will be the opposite direction to the current one.
 				tileCurrent = new Tile(newX, newY, (Direction)((directionCurrent + 2) % 4));
-				actionSet(actionMap); // The next action will be tile mapping as this is a new tile and its walls are not mapped yet.
+				actionSet(actionFind("mmp"));  // The next action will be tile mapping as this is a new tile and its walls are not mapped yet.
 			}
 		}
 	}
@@ -415,7 +422,7 @@ void RobotMaze::moveAhead() {
 void RobotMaze::moveAhead1TileTest(){
 	testMode = true; 
 	directionCurrent = Direction::UP;
-	actionSet(actionMoveAhead);
+	actionSet("mma");
 }
 
 /** Turns the robot till the target bearing achieved.
@@ -426,17 +433,19 @@ void RobotMaze::moveTurn() {
 	if (setup())
 		startedAtMs = millis();
 
+	ActionMoveTurn* actionMoveTurn = (ActionMoveTurn*)actionFind("mmt");
 	int8_t speed = actionMoveTurn->turnByCCW > 180 ? TOP_SPEED : -TOP_SPEED; // Determine if it is better (smaller angle) to turn CW or CCW.
 	motorGroup->go(speed, -speed); // Turn on the motors. In fact, only first run will do anything as the speeds will not change later.
 	if (fabs(mrm_imu->heading() - actionMoveTurn->endAngle) < 5) { // If angle error is less than 5 degrees, action over.
 		motorGroup->stop();
+		ActionMove* actionMove = (ActionMove*)actionFind("mmo");
 		directionCurrent = actionMove->direction; // Robot's direction changed after turn so store the new value.
 		// Remember the new heading that IMU following algorithm uses. If no wall to alignment after turn, this value will be used immediately.
 		imuLastValid = actionMoveTurn->endAngle;
 		if (testMode)
 			end();
 		else
-			actionSet(actionDecide); // After rotation, the tile stays the same, and no mapping will be needed. The new action is decision what to do next.
+			actionSet("mde"); // After rotation, the tile stays the same, and no mapping will be needed. The new action is decision what to do next.
 	}
 
 	//print("T: %i - %i = %i\n\r", (int)mrm_imu->heading(), (int)actionMoveTurn->endAngle, (int)fabs(mrm_imu->heading() - actionMoveTurn->endAngle));
@@ -457,6 +466,7 @@ void RobotMaze::moveTurn() {
 void RobotMaze::moveTurnTest(){
 	testMode = true; 
 	directionCurrent = Direction::UP;
+	ActionMoveTurn* actionMoveTurn = (ActionMoveTurn*)actionFind("mmt");
 	actionMoveTurn->turnByCCW = 90;
 	actionSet(actionMoveTurn);
 }
@@ -526,7 +536,7 @@ void RobotMaze::rescueMaze() {
 	the maze would be upside down.*/
 	directionCurrent = UP;
 	stepCount = 0; // Step counter. Used to stop a robot after a certain number of steps, if needed.
-	actionSet(actionMap); // The robot is on uncharted tile so first action will be wall mapping.
+	actionSet("mmp"); // The robot is on uncharted tile so first action will be wall mapping.
 	delayMs(200); // Debounce switch - the switch is turned on repeatedly due to its inductance. Skip that time in a crude manner - just wait.
 }
 

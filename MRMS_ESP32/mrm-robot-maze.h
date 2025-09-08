@@ -51,17 +51,6 @@ public:
 	void wallSet(Direction direction, WallStatus wallStatus) { _wall &= ~(0b11 << (direction * 2)); _wall |= (wallStatus << (direction * 2)); }
 };
 
-
-/* All the Action-classes have to be forward declared here (before RobotMaze) as RobotMaze declaration uses them. The other option would be
-not to declare them here, but in that case Action-objects in RobotMaze will have to be declared as ActionBase class, forcing downcast later in code, if
-derived functions are used.*/
-class ActionDecide;
-class ActionMap;
-class ActionMove;
-class ActionMoveAhead;
-class ActionMoveTurn;
-class ActionRescueMaze;
-
 /** Robot for RCJ Rescue Maze, a class derived from the base Robot class.
 */
 class RobotMaze : public Robot {
@@ -78,15 +67,6 @@ class RobotMaze : public Robot {
 	const uint8_t LEFT_ENCODER_PIN = 16;
 	const uint8_t RIGHT_ENCODER_PIN = 17;
 
-	// Actions' declarations
-	ActionDecide* actionDecide;
-	ActionBase* actionGoStraightAhead;
-	ActionMap* actionMap;
-	ActionMove* actionMove;
-	ActionMoveAhead* actionMoveAhead;
-	ActionMoveTurn* actionMoveTurn;
-	ActionRescueMaze* actionRescueMaze;
-
 	Direction directionCurrent; // Current robot's direction.
 
 	float imuLastValid = 9999; // Last measured compass value. Important for moving ahead when no wall available.
@@ -96,6 +76,8 @@ class RobotMaze : public Robot {
 	uint16_t stepCount; // Number of steps made.
 
 	Tile* tileCurrent; // Current tile (robot's position).
+
+	DistanceInterface* distanceInteface = NULL;
 
 public:
 	bool testMode; // If true, robot will stop after each action, instead of continuing the next action. Normally false.
@@ -289,21 +271,6 @@ for no-menu actions.
 The fourth pareameter is menu level. When omitted, the action will not be a part of the menu. Use 1 otherwise. Higher level numbers will display the action in submenues, not used here.
 */
 
-/** Action that decides what to do next, using Tremaux algorithm. If a not-visited direction exists, go there. If not, return to the tile robot came from.
-*/
-class ActionDecide : public ActionBase {
-	void perform() { ((RobotMaze*)_robot)->decide(); }
-public:
-	ActionDecide(Robot* robot) : ActionBase(robot, "", "") {}
-};
-
-/** Maps walls detected and other external readings in variables.
-*/
-class ActionMap : public ActionBase {
-	void perform() { ((RobotMaze*)_robot)->map(); }
-public:
-	ActionMap(Robot* robot) : ActionBase(robot, "", "") {}
-};
 
 /** Base class for movement actions.
 */
@@ -311,23 +278,7 @@ class ActionMove : public ActionBase {
 	void perform() { ((RobotMaze*)_robot)->move(); }
 public:
 	Direction direction; // Initial direction is stored to be recalled when using the action.
-	ActionMove(Robot* robot) : ActionBase(robot, "", "") {}
-};
-
-/** Test - move 1 tile ahead.
-*/
-class ActionMove1TileTest : public ActionBase {
-	void perform() { ((RobotMaze*)_robot)->moveAhead1TileTest();}
-public:
-	ActionMove1TileTest(Robot* robot) : ActionBase(robot, "1ti", "Go 1 tile", 1) {}
-};
-
-/** Go straight ahead.
-*/
-class ActionMoveAhead : public ActionMove {
-	void perform() { ((RobotMaze*)_robot)->moveAhead(); }
-public:
-	ActionMoveAhead(Robot* robot) : ActionMove(robot) {}
+	ActionMove(Robot* robot) : ActionBase(robot, "") {}
 };
 
 /** Turn.
@@ -340,35 +291,10 @@ public:
 	ActionMoveTurn(Robot* robot) : ActionMove(robot) {}
 };
 
-/** Turn.
-*/
-class ActionMoveTurnTest : public ActionBase {
-	void perform() { ((RobotMaze*)_robot)->moveTurnTest(); }
+class ActionRobotMaze : public ActionBase {
+	void perform(){(((RobotMaze*)_robot)->*_actionPerform)(); };
 public:
-	ActionMoveTurnTest(Robot* robot) : ActionBase(robot, "tte", "Turn test", 1) {}
-};
-
-
-/** Start RCJ Rescue Maze run.
-*/
-class ActionRescueMaze : public ActionBase {
-	void perform() { ((RobotMaze*)_robot)->rescueMaze(); }
-public:
-	ActionRescueMaze(Robot* robot) : ActionBase(robot, "maz", "Rescue Maze", 1) {}
-};
-
-/** Test for Mecanum wheels. Used only when the robot is rigged with mecanum wheels.
-*/
-class ActionOmniWheelsTest : public ActionBase {
-	void perform() { ((RobotMaze*)_robot)->omniWheelsTest(); }
-public:
-	ActionOmniWheelsTest(Robot* robot) : ActionBase(robot, "omn", "Test omni wh.", 1) {}
-};
-
-/** Test, checking and displaying all walls.
-*/
-class ActionWallsTest : public ActionBase {
-	void perform() { ((RobotMaze*)_robot)->wallsTest(); }
-public:
-	ActionWallsTest(Robot* robot) : ActionBase(robot, "wlt", "Walls test", 1) {}
+	ActionRobotMaze(Robot* robot, const char text[20], uint8_t menuLevel = 1, Board::BoardId boardsId = Board::BoardId::ID_ANY,
+		Mrm_8x8a::LEDSign* ledSign8x8 = NULL,  void (RobotMaze::*actionPerform)() = NULL) : 
+		ActionBase(robot, text, menuLevel, boardsId, ledSign8x8, (void (Robot::*)())actionPerform) {}
 };

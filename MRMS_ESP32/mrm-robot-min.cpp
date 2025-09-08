@@ -30,12 +30,13 @@ RobotMin::RobotMin(char name[]) : Robot(name) {
 	// 2nd, 4th, 6th, and 8th parameters are output connectors of the controller (0 - 3, meaning 1 - 4. connector). 2nd one must be connected to LB (Left-Back) motor,
 	// 4th to LF (Left-Front), 6th to RF (Right-Front), and 8th to RB (Right-Back). Therefore, You can connect motors freely, but have to
 	// adjust the parameters here. In this example output (connector) 3 is LB, etc.
-	motorGroup = new MotorGroupDifferential(this, mrm_mot4x3_6can, 3, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 0);
+	motorGroup = new MotorGroupDifferential(mrm_mot4x3_6can, 3, mrm_mot4x3_6can, 1, mrm_mot4x3_6can, 2, mrm_mot4x3_6can, 0);
+	motorGroup->delayMs = [this](uint16_t pauseMs){delayMs(pauseMs);}; //To avoid back-pointer
 	// motorGroup = new MotorGroupDifferential(this, mrm_bldc4x2_5, 3, mrm_bldc4x2_5, 1, mrm_bldc4x2_5, 2, mrm_bldc4x2_5, 0);
 
 	// Depending on your wiring, it may be necessary to spin some motors in the other direction. In this example, no change needed,
 	// but uncommenting the following line will change the direction of the motor 2.
-	//mrm_mot4x3_6can->directionChange(2);
+	//mrm_mot4x3_6can->directionChange(mrm_mot4x3_6can->devices[2]);
 
 	// All the actions will be defined here; the objects will be created. 
 
@@ -46,9 +47,9 @@ RobotMin::RobotMin(char name[]) : Robot(name) {
 	// This test is not supposed to be called in code.
 
 	// Set buttons' actions
-	mrm_8x8a->actionSet(_actionLoop0, 1); // Starts stress test.
-	mrm_8x8a->actionSet(_actionLoop, 2); // Free-defined action.
-	mrm_8x8a->actionSet(_actionMenuMain, 3); // Stop and display menu
+	// mrm_8x8a->actionSet(_actionLoop0, 1); // Starts stress test.
+	mrm_8x8a->actionSet(actionFind("loo"), 2); // Free-defined action.
+	mrm_8x8a->actionSet(actionFind("x"), 3); // Stop and display menu
 	// Put Your buttons' actions here.
 
 	// Upload custom bitmaps into mrm-8x8a.
@@ -76,6 +77,7 @@ void RobotMin::loop() {
 	#if LIST_ALL
 	uint8_t cnt = 0;
     uint8_t i = 0;
+	Device * boardInfo;
     do{
         deviceInfo(i, boardInfo, SENSOR_BOARD);
         if (strcmp(boardInfo->name, "") != 0){
@@ -371,7 +373,7 @@ void RobotMin::loop0(){
 	}
 	if (ok){
 		uint8_t count = devicesScan(true);
-		actionSet(_actionLoop0);
+		actionSet("lo0");
 		if (count == DEVICE_COUNT_LED + DEVICE_COUNT_LIDARS + DEVICE_COUNT_MOTORS + 
 			DEVICE_COUNT_REFLECTIVE + DEVICE_COUNT_COLOR + DEVICE_COUNT_IR_FINDER){
 			print("Pass %i OK\n\r", ++i);
@@ -382,11 +384,11 @@ void RobotMin::loop0(){
 			#endif
 		}
 		else{
-			bool ref = mrm_ref_can->alive(0);
-			bool lid0 = mrm_lid_can_b->alive(0);
-			bool lid1 = mrm_lid_can_b->alive(1);
-			bool lid2 = mrm_lid_can_b->alive(2);
-			bool mot0 = mrm_mot4x3_6can->alive(0);
+			bool ref = mrm_ref_can->aliveWithOptionalScan(&mrm_ref_can->devices[0]);
+			bool lid0 = mrm_lid_can_b->aliveWithOptionalScan(&mrm_lid_can_b->devices[0]);
+			bool lid1 = mrm_lid_can_b->aliveWithOptionalScan(&mrm_lid_can_b->devices[1]);
+			bool lid2 = mrm_lid_can_b->aliveWithOptionalScan(&mrm_lid_can_b->devices[2]);
+			bool mot0 = mrm_mot4x3_6can->aliveWithOptionalScan(&mrm_mot4x3_6can->devices[0]);
 			char buffer[40];
 			sprintf(buffer, "%i dev, %s%s%s%s%s", count, ref ? "" : "R", lid0 ? "" : "L0", 
 				lid1 ? "" : "L1", lid2 ? "" : "L2", mot0 ? "" : "M0");
@@ -423,18 +425,18 @@ void RobotMin::loop2(){
 	delayMs(5); // Read all the messages sent after stop.
 
 	// Set not alive
-print("Board: %s\n\r", board[14]->name());
-			board[14]->aliveSet(false); // Mark as not alive. It will be marked as alive when returned message arrives.
+print("Board: %s\n\r", boards[14]->name().c_str());
+			boards[14]->aliveSet(false); // Mark as not alive. It will be marked as alive when returned message arrives.
 
 	// Send alive ping
 	for (uint8_t k = 0; k < 2; k++)
-				board[14]->devicesScan(verbose);
-				// print("SC1 %s ", board[i]->name()),count += board[i]->devicesScan(verbose), print("SC2");
+				boards[14]->devicesScan();
+				// print("SC1 %s ", board[i]->name().c_str()),count += board[i]->devicesScan(), print("SC2");
 
 
 	// Count alive
 	uint8_t count = 0;
-			count += board[14]->aliveCount(); 
+			count += boards[14]->aliveCount(); 
 
 
 		print("%i devices.\n\r", count);

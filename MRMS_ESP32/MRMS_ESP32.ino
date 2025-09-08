@@ -8,7 +8,7 @@
 Robot *robot;
 
 void setup() {
-	robot = new RobotMaze((char*)"Pluto"); // RobotLine, RobotMaze, RobotMin, RobotSoccer, or Your custom robot. "My robot" is Bluetooth name.
+	robot = new RobotLine((char*)"Pluto"); // RobotLine, RobotMaze, RobotMin, RobotSoccer, or Your custom robot. "My robot" is Bluetooth name.
 	print("Start.\n\r");
 }
 
