@@ -77,12 +77,12 @@ RobotSoccer::RobotSoccer(char name[]) : Robot(name) {
 	pidRotation = new Mrm_pid(2.0, 100, 0); // PID controller, regulates rotation around z axis
 
 	actions->insert({"soc", new ActionRobotSoccer(this, "Soccer play", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::play)});
-	actions->insert({"bou", new ActionRobotSoccer(this, "Soccer bounce", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::bounce)});
-	actions->insert({"clb", new ActionRobotSoccer(this, "Soccer calibrate", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::calibrate)});
-	actions->insert({"cat", new ActionRobotSoccer(this, "Soccer catch", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::catchBall)});
-	actions->insert({"apr", new ActionRobotSoccer(this, "Soccer approach", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::goalApproach)});
-	actions->insert({"idl", new ActionRobotSoccer(this, "Soccer idle", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::idle)});
-	actions->insert({"avo", new ActionRobotSoccer(this, "Soccer line avoid", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::lineAvoid)});
+	actions->insert({"bou", new ActionRobotSoccer(this, "Soccer bounce", 1, Board::BoardId::ID_ANY, signBounce, &RobotSoccer::bounce)});
+	actions->insert({"clb", new ActionRobotSoccer(this, "Soccer calibrate", 1, Board::BoardId::ID_ANY, signCalibrate, &RobotSoccer::calibrate)});
+	actions->insert({"cat", new ActionRobotSoccer(this, "Soccer catch", 1, Board::BoardId::ID_ANY, signCatch, &RobotSoccer::catchBall)});
+	actions->insert({"apr", new ActionRobotSoccer(this, "Soccer approach", 1, Board::BoardId::ID_ANY, signGoalApproach, &RobotSoccer::goalApproach)});
+	actions->insert({"idl", new ActionRobotSoccer(this, "Soccer idle", 1, Board::BoardId::ID_ANY, signIdle, &RobotSoccer::idle)});
+	actions->insert({"avo", new ActionRobotSoccer(this, "Soccer line avoid", 1, Board::BoardId::ID_ANY, signLineAvoid, &RobotSoccer::lineAvoid)});
 	actions->insert({"bar", new ActionRobotSoccer(this, "Soccer barrier test", 1, Board::BoardId::ID_ANY, NULL, &RobotSoccer::barrierTest)});
 
 

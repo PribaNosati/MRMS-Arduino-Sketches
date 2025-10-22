@@ -60,8 +60,8 @@ RobotLine::RobotLine(char name[]) : Robot(name) {
 	mrm_servo->add(17, (char*)"ServoL", 0, 180, 0.5, 2.5); // Data for mrm-ps-1109hb
 
 	// Set buttons' actions.
-	// mrm_8x8a->actionSet(actionRCJLine, 0); // Button 1 starts RCJ Line.
-	// mrm_8x8a->actionSet(actionEvacuationZone, 1); // Button 2 starts robot in evacution zone.
+	// mrm_8x8a->actionSet(actionFind("rcj"), 0); // Button 1 starts RCJ Line.
+	// mrm_8x8a->actionSet(actionFind("eva"), 1); // Button 2 starts robot in evacution zone.
 	mrm_8x8a->actionSet(actionFind("loo"), 2); // Button 3 starts user defined loop() function
 	mrm_8x8a->actionSet(actionFind("sto"), 3); // Stop the robot
 
